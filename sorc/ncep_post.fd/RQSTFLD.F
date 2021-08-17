@@ -2091,6 +2091,7 @@
       DATA IFILV(686),AVBL(686),IQ(686),IS(686),AVBLGRB2(686)      &
      &                      /1,'DUST25 SFC MASS CON ',161,001,     &
                              'dust pm25 sfc mass con            '/
+#if 0
       DATA IFILV(687),AVBL(687),IQ(687),IS(687),AVBLGRB2(687)      &
      &                      /1,'BC SFC MASS CON     ',162,001,     &
                              'black carbon sfc mass con         '/
@@ -2127,9 +2128,10 @@
       DATA IFILV(698),AVBL(698),IQ(698),IS(698),AVBLGRB2(698)      &
      &                      /1,'INST AER FN SMASS   ',164,001,     &
                              'instn aer fine mode sfc mass con  '/
-      DATA IFILV(711),AVBL(711),IQ(711),IS(711),AVBLGRB2(711)      &
-     &                      /1,'GSD CLD BOT HEIGHT  ',007,002,     &
-     &                       'GSD HGT ON cloud_base'/
+#endif
+      DATA IFILV(699),AVBL(699),IQ(699),IS(699),AVBLGRB2(699)      &
+     &                      /1,'MIE OPT DEP AT 550  ',129,200,     &
+                             'mie aerosol optical depth at 550  '/
 ! Reserving Index 601-700 for GOCART
 !
 

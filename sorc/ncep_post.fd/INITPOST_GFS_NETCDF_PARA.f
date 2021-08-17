@@ -43,8 +43,9 @@
               tcucns, train, el_pbl, exch_h, vdifftt, vdiffmois, dconvmois, nradtt,             &
               o3vdiff, o3prod, o3tndy, mwpv, unknown, vdiffzacce, zgdrag,cnvctummixing,         &
               vdiffmacce, mgdrag, cnvctvmmixing, ncnvctcfrac, cnvctumflx, cnvctdmflx,           &
-              cnvctzgdrag, sconvmois, cnvctmgdrag, cnvctdetmflx, duwt, duem, dusd, dudp,        &
-              wh, qqg, ref_10cm
+              cnvctzgdrag, sconvmois, cnvctmgdrag, cnvctdetmflx, duwt, duem, dusd, dudp,   &
+              dusv,ssem,sssd,ssdp,sswt,sssv,bcem,bcsd,bcdp,bcwt,bcsv,ocem,ocsd,ocdp, &
+              ocwt,ocsv,wh, qqg, ref_10cm
       use vrbls2d, only: f, pd, fis, pblh, ustar, z0, ths, qs, twbs, qwbs, avgcprate,           &
               cprate, avgprec, prec, lspa, sno, si, cldefi, th10, q10, tshltr, pshltr,          &
               tshltr, albase, avgalbedo, avgtcdc, czen, czmean, mxsnal, radot, sigt4,           &
@@ -63,7 +64,8 @@
               avgedir,avgecan,avgetrans,avgesnow,avgprec_cont,avgcprate_cont,rel_vort_max, &
               avisbeamswin,avisdiffswin,airbeamswin,airdiffswin,refdm10c_max,wspd10max, &
               alwoutc,alwtoac,aswoutc,aswtoac,alwinc,aswinc,avgpotevp,snoavg, &
-              ti 
+              dustcb,bccb,occb,sulfcb,sscb,dustallcb,ssallcb,dustpm,sspm,pp25cb,pp10cb, &
+              ti,maod
       use soil,  only: sldpth, sh2o, smc, stc
       use masks, only: lmv, lmh, htm, vtm, gdlat, gdlon, dx, dy, hbm2, sm, sice
       use physcons_post,   only: grav => con_g, fv => con_fvirt, rgas => con_rd,                     &
@@ -76,7 +78,7 @@
               jend_m, imin, imp_physics, dt, spval, pdtop, pt, qmin, nbin_du, nphs, dtq2, ardlw,&
               ardsw, asrfc, avrain, avcnvc, theat, gdsdegr, spl, lsm, alsl, im, jm, im_jm, lm,  &
               jsta_2l, jend_2u, nsoil, lp1, icu_physics, ivegsrc, novegtype, nbin_ss, nbin_bc,  &
-              nbin_oc, nbin_su, gocart_on, pt_tbl, hyb_sigp, filenameFlux, fileNameAER
+              nbin_oc, nbin_su, gocart_on, nasa_on, pt_tbl, hyb_sigp, filenameFlux, fileNameAER
       use gridspec_mod, only: maptype, gridtype, latstart, latlast, lonstart, lonlast, cenlon,  &
               dxval, dyval, truelat2, truelat1, psmapf, cenlat,lonstartv, lonlastv, cenlonv,    &
               latstartv, latlastv, cenlatv,latstart_r,latlast_r,lonstart_r,lonlast_r
@@ -162,6 +164,13 @@
       real,   allocatable      :: tmp(:)
       real                     :: buf(im,jsta_2l:jend_2u)
       real                     :: buf3d(im,jsta_2l:jend_2u,lm)
+      real                     :: chem_2d(im,jsta_2l:jend_2u)
+      real                     :: chemT(im,jsta_2l:jend_2u,lm)
+      real                     :: dt1(im,jsta_2l:jend_2u,lm)
+      real                     :: dt2(im,jsta_2l:jend_2u,lm)
+      real                     :: dt3(im,jsta_2l:jend_2u,lm)
+      real                     :: dt4(im,jsta_2l:jend_2u,lm)
+      real                     :: dt5(im,jsta_2l:jend_2u,lm)
 
 !     real buf(im,jsta_2l:jend_2u),bufsoil(im,nsoil,jsta_2l:jend_2u)   &
 !         ,buf3d(im,jsta_2l:jend_2u,lm),buf3d2(im,lp1,jsta_2l:jend_2u)
@@ -834,9 +843,342 @@
       
       pt    = ak5(1) 
 
+      deallocate (vcoord4)
 !
 
-      deallocate (vcoord4)
+
+      print *, 'gocart_on=',gocart_on
+      if (gocart_on .or. nasa_on) then
+
+! GFS output dust in nemsio (GOCART)
+        dustcb=0.0
+        dustallcb=0.0
+        do n=1,nbin_du
+          do l=1,lm
+!$omp parallel do private(i,j)
+            do j=jsta_2l,jend_2u
+              do i=1,im
+                dust(i,j,l,n) = spval
+              enddo
+            enddo
+          enddo
+        enddo
+!       DUST = SPVAL
+        !VarName='du001'
+        VarName='dust1'
+       call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u, &
+       spval,VarName,dt1(1,jsta_2l,1),lm)
+        VarName='dust2'
+       call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u, &
+       spval,VarName,dt2(1,jsta_2l,1),lm)
+        VarName='dust3'
+       call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u, &
+       spval,VarName,dt3(1,jsta_2l,1),lm)
+        VarName='dust4'
+       call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u, &
+       spval,VarName,dt4(1,jsta_2l,1),lm)
+        VarName='dust5'
+      call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u, &
+       spval,VarName,dt5(1,jsta_2l,1),lm)
+
+      
+        do l=1,lm
+
+!$omp parallel do private(i,j,n,tv)
+          do j=jsta,jend
+          do i=1,im
+          dust(i,j,l,1)=dt1(i,j,l)
+          dust(i,j,l,2)=dt2(i,j,l)
+          dust(i,j,l,3)=dt3(i,j,l)
+          dust(i,j,l,4)=dt4(i,j,l)
+          dust(i,j,l,5)=dt5(i,j,l)
+          
+
+           dustcb(i,j)=dustcb(i,j)+&
+           (dt1(i,j,l)+0.38*dt2(i,j,l))* &
+           dpres(i,j,l)/grav
+
+
+           dustallcb(i,j)=dustallcb(i,j)+ &
+           (dust(i,j,l,1)+dust(i,j,l,2)+ &
+           dust(i,j,l,3)+0.67*dust(i,j,l,4))* &
+           dpres(i,j,l)/grav
+           enddo
+           enddo
+        end do ! do loop for l
+
+ 
+! GFS output sea salt in nemsio (GOCART)
+        sscb=0.0
+        ssallcb=0.0
+        
+        VarName='seas1'
+       call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u, &
+       spval,VarName,dt1(1,jsta_2l,1),lm)
+
+        VarName='seas2'
+       call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u, &
+       spval,VarName,dt2(1,jsta_2l,1),lm)
+
+        VarName='seas3'
+       call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u, &
+       spval,VarName,dt3(1,jsta_2l,1),lm)
+
+        VarName='seas4'
+       call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u, &
+       spval,VarName,dt4(1,jsta_2l,1),lm)
+
+        VarName='seas5'
+       call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u, &
+       spval,VarName,dt5(1,jsta_2l,1),lm)
+
+
+
+        do l=1,lm
+!$omp parallel do private(i,j,n,tv)
+          do j=jsta,jend
+          do i=1,im
+          salt(i,j,l,1)=dt1(i,j,l)
+          salt(i,j,l,2)=dt2(i,j,l)
+          salt(i,j,l,3)=dt3(i,j,l)
+          salt(i,j,l,4)=dt4(i,j,l)
+          salt(i,j,l,5)=dt5(i,j,l)
+
+            sscb(i,j)=sscb(i,j)+ &
+         (dt1(i,j,l)+dt2(i,j,l)+0.75*dt3(i,j,l))*  &
+           dpres(i,j,l)/grav
+
+
+          ssallcb(i,j)=ssallcb(i,j)+ &
+         (dt1(i,j,l)+dt2(i,j,l)+dt3(i,j,l)+dt4(i,j,l)*0.83)* &
+           dpres(i,j,l)/grav
+           enddo
+           enddo
+        end do ! do loop for l
+! GFS output black carbon in nemsio (GOCART)
+        bccb=0.0
+
+
+        VarName='bc1'
+        call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u, &
+       spval,VarName,dt1(1,jsta_2l,1),lm)
+
+        VarName='bc2'
+        call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u,&
+       spval,VarName,dt2(1,jsta_2l,1),lm)
+
+        do l=1,lm
+!$omp parallel do private(i,j,n,tv)
+          do j=jsta,jend
+          do i=1,im
+
+          soot(i,j,l,1)=dt1(i,j,l)
+          soot(i,j,l,2)=dt2(i,j,l)
+
+            bccb(i,j)=bccb(i,j)+ &
+        (soot(i,j,l,1)+soot(i,j,l,2))* &
+           dpres(i,j,l)/grav
+           enddo
+           enddo
+        end do ! do loop for l
+
+        occb=0.0
+! GFS output organic carbon in nemsio (GOCART)
+
+        VarName='oc1'
+        call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u,&
+       spval,VarName,dt1(1,jsta_2l,1),lm)
+
+        VarName='oc2'
+        call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u,&
+       spval,VarName,dt2(1,jsta_2l,1),lm)
+        do l=1,lm
+          ll=lm-l+1
+!$omp parallel do private(i,j,n,tv)
+          do j=jsta,jend
+          do i=1,im
+          waso(i,j,l,1)=dt1(i,j,l)
+          waso(i,j,l,2)=dt2(i,j,l)
+
+            occb(i,j)=occb(i,j)+ &
+        (waso(i,j,l,1)+waso(i,j,l,2))* &
+           dpres(i,j,l)/grav
+           enddo
+           enddo
+        end do ! do loop for l
+
+! GFS output sulfate in netcdf (GOCART)
+        sulfcb=0.0
+
+!       SUSO = SPVAL
+        if (gocart_on) then
+        VarName='sulf'
+        endif
+
+        if (nasa_on) then
+        VarName='so4'
+        endif
+        call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u,&
+       spval,VarName,dt1(1,jsta_2l,1),lm)
+        
+         do l=1,lm
+          ll=lm-l+1
+!$omp parallel do private(i,j,n,tv)
+          do j=jsta,jend
+          do i=1,im
+          suso(i,j,l,1)=dt1(i,j,l)
+
+            sulfcb(i,j)=sulfcb(i,j)+ &
+        suso(i,j,l,1)* &
+           dpres(i,j,l)/grav
+           enddo
+           enddo
+        end do ! do loop for l
+
+! GFS output pp25 in nemsio (GOCART)
+        pp25cb=0.0
+
+        if (gocart_on) then
+        VarName='pp25'
+        endif
+
+        if (nasa_on) then
+        VarName='pm25'
+        endif
+        call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u,&
+       spval,VarName,dt1(1,jsta_2l,1),lm)
+
+! GFS output pp10 in nemsio (GOCART)
+        pp10cb=0.0
+        if (gocart_on) then
+        VarName='pp10'
+        endif
+
+        if (nasa_on) then
+        VarName='pm10'
+        endif
+
+        call read_netcdf_3d_para(ncid3d,im,jm,jsta,jsta_2l,jend,jend_2u,&
+       spval,VarName,dt2(1,jsta_2l,1),lm)
+
+        do l=1,lm
+!$omp parallel do private(i,j,n,tv)
+          do j=jsta,jend
+          do i=1,im
+          pp25(i,j,l,1)=dt1(i,j,l)
+          pp10(i,j,l,1)=dt2(i,j,l)
+
+
+            pp25cb(i,j)=pp25cb(i,j)+ &
+        pp25(i,j,l,1)* dpres(i,j,l)/grav
+
+            pp10cb(i,j)=pp10cb(i,j)+ &
+        pp10(i,j,l,1)* dpres(i,j,l)/grav
+           enddo
+           enddo
+        end do ! do loop for l
+! -- compute air density RHOMID and remove negative tracer values
+        do l=1,lm
+!$omp parallel do private(i,j,n,tv)
+          do j=jsta,jend
+            do i=1,im
+
+              TV = T(I,J,L) * (H1+D608*MAX(Q(I,J,L),QMIN))
+              RHOMID(I,J,L) = PMID(I,J,L) / (RD*TV)
+              do n = 1,  NBIN_DU
+                IF ( dust(i,j,l,n) < SPVAL) THEN
+                  DUST(i,j,l,n) = MAX(DUST(i,j,l,n), 0.0)
+                ENDIF
+              enddo
+              do n = 1,  NBIN_SS
+                IF ( salt(i,j,l,n) < SPVAL) THEN
+                  SALT(i,j,l,n) = MAX(SALT(i,j,l,n), 0.0)
+                ENDIF
+              enddo
+              do n = 1,  NBIN_OC
+                IF ( waso(i,j,l,n) < SPVAL) THEN
+                  WASO(i,j,l,n) = MAX(WASO(i,j,l,n), 0.0)
+                ENDIF
+              enddo
+              do n = 1,  NBIN_BC
+                IF ( soot(i,j,l,n) < SPVAL) THEN
+                  SOOT(i,j,l,n) = MAX(SOOT(i,j,l,n), 0.0)
+                ENDIF
+              enddo
+              do n = 1,  NBIN_SU
+                IF ( suso(i,j,l,n) < SPVAL) THEN
+                  SUSO(i,j,l,n) = MAX(SUSO(i,j,l,n), 0.0)
+                ENDIF
+              enddo
+
+            end do
+          end do
+        end do
+             l=lm
+!$omp parallel do private(i,j)
+          do j=jsta,jend
+            do i=1,im
+            dustcb(i,j) = MAX(dustcb(i,j), 0.0)
+            dustallcb(i,j) = MAX(dustallcb(i,j), 0.0)
+            sscb(i,j) = MAX(sscb(i,j), 0.0)
+            ssallcb(i,j) = MAX(ssallcb(i,j), 0.0)
+            bccb(i,j) = MAX(bccb(i,j), 0.0)
+            occb(i,j) = MAX(occb(i,j), 0.0)
+            sulfcb(i,j) = MAX(sulfcb(i,j), 0.0)
+            pp25cb(i,j) = MAX(pp25cb(i,j), 0.0)
+            pp10cb(i,j) = MAX(pp10cb(i,j), 0.0)
+
+!      PM25 dust and seasalt      
+       dustpm(i,j)=(dust(i,j,l,1)+0.38*dust(i,j,l,2))*RHOMID(i,j,l)
+!ug/m3
+       sspm(i,j)=(salt(i,j,l,1)+salt(i,j,l,2)+ &
+       0.83*salt(i,j,l,3))*RHOMID(i,j,l)  !ug/m3 
+
+       if (gocart_on) then
+!      PM10 concentration
+       dusmass(i,j)=(dust(i,j,l,1)+dust(i,j,l,2)+dust(i,j,l,3)+ &
+       0.74*dust(i,j,l,4)+salt(i,j,l,1)+salt(i,j,l,2)+salt(i,j,l,3)+ &
+       salt(i,j,l,4) + &
+       salt(i,j,l,5)+soot(i,j,l,1)+soot(i,j,l,2)+waso(i,j,l,1)+ &
+       waso(i,j,l,2) +suso(i,j,l,1)+pp25(i,j,l,1)+pp10(i,j,l,1)) &
+       *RHOMID(i,j,l)  !ug/m3
+!      PM25 concentration       
+       dusmass25(i,j)=(dust(i,j,l,1)+0.38*dust(i,j,l,2)+ &
+       salt(i,j,l,1)+salt(i,j,l,2)+0.83*salt(i,j,l,3) + &
+       soot(i,j,l,1)+soot(i,j,l,2)+waso(i,j,l,1)+ &
+       waso(i,j,l,2) +suso(i,j,l,1)+pp25(i,j,l,1))*RHOMID(i,j,l)  !ug/m3
+
+!      PM10 column
+        ducmass(i,j)=dustallcb(i,j)+ssallcb(i,j)+bccb(i,j)+ &
+         occb(i,j)+sulfcb(i,j)+pp25cb(i,j)+pp10cb(i,j)
+!      PM25 column
+        ducmass25(i,j)=dustcb(i,j)+sscb(i,j)+bccb(i,j)+occb(i,j) &
+         +sulfcb(i,j)+pp25cb(i,j)
+       endif !gocart_on
+
+       if (nasa_on) then
+!      PM10 concentration
+       dusmass(i,j)=pp10(i,j,l,1)*RHOMID(i,j,l)  !ug/m3
+!      PM25 concentration       
+       dusmass25(i,j)=pp25(i,j,l,1)*RHOMID(i,j,l)  !ug/m3
+
+!      PM10 column
+        ducmass(i,j)=pp10cb(i,j)
+!      PM25 column
+        ducmass25(i,j)=pp25cb(i,j)
+       endif !nasa_on
+
+
+            end do
+          end do
+       
+
+      endif                     ! endif for gocart_on & nasa_on
+
+!         ',ll,waso(isa,jsa,ll,2)
+!         ',ll,waso(isa,jsa,ll,2)
+
+
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !
@@ -2330,6 +2672,229 @@
         enddo
       enddo
 
+
+      print *, 'gocart_on=',gocart_on
+      print *, 'nasa_on=',nasa_on
+      if (gocart_on) then
+
+
+! retrieve dust emission fluxes
+       do K = 1, nbin_du
+       if ( K == 1) VarName='duem001'
+       if ( K == 2) VarName='duem002'
+       if ( K == 3) VarName='duem003'
+       if ( K == 4) VarName='duem004'
+       if ( K == 5) VarName='duem005'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      duem(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve dust sedimentation fluxes
+      do K = 1, nbin_du
+       if ( K == 1) VarName='dust1sd'
+       if ( K == 2) VarName='dust2sd'
+       if ( K == 3) VarName='dust3sd'
+       if ( K == 4) VarName='dust4sd'
+       if ( K == 5) VarName='dust5sd'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      dusd(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve dust dry deposition fluxes
+      do K = 1, nbin_du
+       if ( K == 1) VarName='dust1dp'
+       if ( K == 2) VarName='dust2dp'
+       if ( K == 3) VarName='dust3dp'
+       if ( K == 4) VarName='dust4dp'
+       if ( K == 5) VarName='dust5dp'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      dudp(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve dust wet deposition fluxes
+      do K = 1, nbin_du
+       if ( K == 1) VarName='dust1wtl'
+       if ( K == 2) VarName='dust2wtl'
+       if ( K == 3) VarName='dust3wtl'
+       if ( K == 4) VarName='dust4wtl'
+       if ( K == 5) VarName='dust5wtl'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      duwt(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve dust scavenging fluxes
+      do K = 1, nbin_du
+       if ( K == 1) VarName='dust1wtc'
+       if ( K == 2) VarName='dust2wtc'
+       if ( K == 3) VarName='dust3wtc'
+       if ( K == 4) VarName='dust4wtc'
+       if ( K == 5) VarName='dust5wtc'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      dusv(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve seasalt emission fluxes
+      do K = 1, nbin_ss
+       if ( K == 1) VarName='ssem001'
+       if ( K == 2) VarName='ssem002'
+       if ( K == 3) VarName='ssem003'
+       if ( K == 4) VarName='ssem004'
+       if ( K == 5) VarName='ssem005'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      ssem(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve seasalt emission fluxes
+      do K = 1, nbin_ss
+       if ( K == 1) VarName='seas1sd'
+       if ( K == 2) VarName='seas2sd'
+       if ( K == 3) VarName='seas3sd'
+       if ( K == 4) VarName='seas4sd'
+       if ( K == 5) VarName='seas5sd'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      sssd(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve seasalt dry deposition fluxes
+      do K = 1, nbin_ss
+       if ( K == 1) VarName='seas1dp'
+       if ( K == 2) VarName='seas2dp'
+       if ( K == 3) VarName='seas3dp'
+       if ( K == 4) VarName='seas4dp'
+       if ( K == 5) VarName='seas5dp'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      ssdp(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve seasalt wet deposition fluxes
+      do K = 1, nbin_ss
+       if ( K == 1) VarName='seas1wtl'
+       if ( K == 2) VarName='seas2wtl'
+       if ( K == 3) VarName='seas3wtl'
+       if ( K == 4) VarName='seas4wtl'
+       if ( K == 5) VarName='seas5wtl'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      sswt(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve seasalt scavenging fluxes
+      do K = 1, nbin_ss
+       if ( K == 1) VarName='seas1wtc'
+       if ( K == 2) VarName='seas1wtc'
+       if ( K == 3) VarName='seas1wtc'
+       if ( K == 4) VarName='seas1wtc'
+       if ( K == 5) VarName='seas1wtc'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      sssv(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve bc emission fluxes
+      do K = 1, nbin_bc
+       if ( K == 1) VarName='bceman'
+       if ( K == 2) VarName='bcembb'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      bcem(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve bc sedimentation fluxes
+      do K = 1, nbin_bc
+       if ( K == 1) VarName='bc1sd'
+       if ( K == 2) VarName='bc2sd'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      bcsd(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve bc dry deposition fluxes
+      do K = 1, nbin_bc
+       if ( K == 1) VarName='bc1dp'
+       if ( K == 2) VarName='bc2dp'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      bcdp(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve bc large wet deposition fluxes
+      do K = 1, nbin_bc
+       if ( K == 1) VarName='bc1wtl'
+       if ( K == 2) VarName='bc2wtl'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      bcwt(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve bc convective wet deposition fluxes
+      do K = 1, nbin_bc
+       if ( K == 1) VarName='bc1wtc'
+       if ( K == 2) VarName='bc2wtc'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      bcsv(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve oc emission fluxes
+      do K = 1, nbin_oc
+       if ( K == 1) VarName='oceman'
+       if ( K == 2) VarName='ocembb'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      ocem(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve oc sedimentation fluxes
+      do K = 1, nbin_oc
+       if ( K == 1) VarName='oc1sd'
+       if ( K == 2) VarName='oc2sd'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      ocsd(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve oc dry deposition fluxes
+      do K = 1, nbin_oc
+       if ( K == 1) VarName='oc1dp'
+       if ( K == 2) VarName='oc2dp'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      ocdp(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve oc large wet deposition fluxes
+      do K = 1, nbin_oc
+       if ( K == 1) VarName='oc1wtl'
+       if ( K == 2) VarName='oc2wtl'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      ocwt(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve oc convective wet deposition fluxes
+      do K = 1, nbin_oc
+       if ( K == 1) VarName='oc1wtc'
+       if ( K == 2) VarName='oc2wtc'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      ocsv(1:im,jsta_2l:jend_2u,K)=chem_2d(1:im,jsta_2l:jend_2u)
+       enddo
+
+! retrieve MIE AOD
+       VarName='maod'
+      call read_netcdf_2d_para(ncid2d,im,jsta,jsta_2l,jend,jend_2u, &
+      spval,VarName,chem_2d)
+      maod(1:im,jsta_2l:jend_2u)=chem_2d(1:im,jsta_2l:jend_2u)
+
+       endif ! gocart_on
 ! done with flux file, close it for now
       Status=nf90_close(ncid2d)
 !      deallocate(tmp,recname,reclevtyp,reclev)

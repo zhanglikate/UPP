@@ -456,7 +456,8 @@
       allocate(dpres(im,jsta_2l:jend_2u,lm))
 
       if (me == 0) print *,' gocart_on=',gocart_on
-      if (gocart_on) then
+      if (me == 0) print *,' nasa_on=',nasa_on
+      if (gocart_on .or. nasa_on) then
 !  
 ! Add GOCART fields
 ! vrbls4d
@@ -530,6 +531,7 @@
         allocate(ssallcb(im,jsta_2l:jend_2u))
         allocate(dustpm(im,jsta_2l:jend_2u))
         allocate(sspm(im,jsta_2l:jend_2u))
+        allocate(maod(im,jsta_2l:jend_2u))
       endif
 ! HWRF RRTMG output 
       allocate(acswupt(im,jsta_2l:jend_2u))

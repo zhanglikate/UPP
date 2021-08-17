@@ -75,7 +75,7 @@ export machine=${machine:-WCOSS_C}
 ###########################
 # Specify Output layers
 ###########################
-export POSTGPVARS="KPO=57,PO=1000.,975.,950.,925.,900.,875.,850.,825.,800.,775.,750.,725.,700.,675.,650.,625.,600.,575.,550.,525.,500.,475.,450.,425.,400.,375.,350.,325.,300.,275.,250.,225.,200.,175.,150.,125.,100.,70.,50.,40.,30.,20.,15.,10.,7.,5.,3.,2.,1.,0.7,0.4,0.2,0.1,0.07,0.04,0.02,0.01,"
+export POSTGPVARS="KPO=57,PO=1000.,975.,950.,925.,900.,875.,850.,825.,800.,775.,750.,725.,700.,675.,650.,625.,600.,575.,550.,525.,500.,475.,450.,425.,400.,375.,350.,325.,300.,275.,250.,225.,200.,175.,150.,125.,100.,70.,50.,40.,30.,20.,15.,10.,7.,5.,3.,2.,1.,0.7,0.4,0.2,0.1,0.07,0.04,0.02,0.01,nasa_on=.true.," #lzhang
 
 ##########################################################
 # Specify variable to directly output pgrb2 files for GDAS/GFS
@@ -300,7 +300,9 @@ do
 
     if [ $GRIBVERSION = 'grib2' ]; then
       export POSTGRB2TBL=${POSTGRB2TBL:-${G2TMPL_SRC}/params_grib2_tbl_new}
-      export PostFlatFile=${PostFlatFile:-$PARMpost/postxconfig-NT-GFS.txt}
+      
+      #export PostFlatFile=${PostFlatFile:-$PARMpost/postxconfig-NT-GFS.txt}
+      export PostFlatFile=${PostFlatFile:-$PARMpost/postxconfig-NT-GFS-FV3CHEM.txt} #lzhang
 
       if [ $RUN = gfs ] ; then
         export IGEN=$IGEN_GFS
@@ -312,7 +314,8 @@ do
       if [[ $RUN = gfs ]] ; then
         if test $fhr -eq 0
         then
-          export PostFlatFile=$PARMpost/postxconfig-NT-GFS-F00.txt
+          #export PostFlatFile=$PARMpost/postxconfig-NT-GFS-F00.txt
+          export PostFlatFile=$PARMpost/postxconfig-NT-GFS-F00-FV3CHEM.txt #lzhang
           export CTLFILE=$PARMpost/postcntrl_gfs_f00.xml
         else
           export CTLFILE=${CTLFILEGFS:-$PARMpost/postcntrl_gfs.xml}
@@ -320,7 +323,8 @@ do
       else
         if test $fhr -eq 0
         then
-          export PostFlatFile=$PARMpost/postxconfig-NT-GFS-F00.txt
+          #export PostFlatFile=$PARMpost/postxconfig-NT-GFS-F00.txt
+          export PostFlatFile=$PARMpost/postxconfig-NT-GFS-F00-FV3CHEM.txt #lzhang
           export CTLFILE=${CTLFILEGFS:-$PARMpost/postcntrl_gfs_f00.xml}
         else
           export CTLFILE=${CTLFILEGFS:-$PARMpost/postcntrl_gfs.xml}

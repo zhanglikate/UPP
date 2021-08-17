@@ -143,7 +143,7 @@
               lp1, lm1, im_jm, isf_surface_physics, nsoil, spl, lsmp1, global,                       &
               jsta, jend, jsta_m, jend_m, jsta_2l, jend_2u, novegtype, icount_calmict, npset, datapd,&
               lsm, fld_info, etafld2_tim, eta2p_tim, mdl2sigma_tim, cldrad_tim, miscln_tim,          &
-              fixed_tim, time_output, imin, surfce2_tim, komax, ivegsrc, d3d_on, gocart_on,          &
+              fixed_tim, time_output, imin, surfce2_tim, komax, ivegsrc, d3d_on, gocart_on,nasa_on,  &
               readxml_tim, spval, fullmodelname, submodelname, hyb_sigp, filenameflat
       use grib2_module,   only: gribit2,num_pset,nrecout,first_grbtbl,grib_info_finalize
       use sigio_module,   only: sigio_head
@@ -173,7 +173,7 @@
 !
       integer      :: kpo,kth,kpv
       real,dimension(komax) :: po,th,pv
-      namelist/nampgb/kpo,po,kth,th,kpv,pv,fileNameAER,d3d_on,gocart_on,popascal &
+      namelist/nampgb/kpo,po,kth,th,kpv,pv,fileNameAER,d3d_on,gocart_on,nasa_on,popascal &
                      ,hyb_sigp
 
       character startdate*19,SysDepInfo*80,IOWRFNAME*3,post_fname*255
@@ -305,6 +305,7 @@
         hyb_sigp    = .true.
         d3d_on      = .false.
         gocart_on   = .false.
+        nasa_on     = .false.
         popascal    = .false.
         fileNameAER = ''
 !       gocart_on   = .true.
@@ -321,8 +322,8 @@
  119    continue
         if(me == 0) then
           print*,'komax,iret for nampgb= ',komax,iret 
-          print*,'komax,kpo,kth,th,kpv,pv,fileNameAER,popascal= ',komax,kpo        &
-     &           ,kth,th(1:kth),kpv,pv(1:kpv),trim(fileNameAER),popascal
+          print*,'komax,kpo,kth,th,kpv,pv,fileNameAER,nasa_on, popascal= ',komax,kpo        &
+     &           ,kth,th(1:kth),kpv,pv(1:kpv),trim(fileNameAER),nasa_on,popascal
         endif
 
 ! set up pressure level from POSTGPVARS or DEFAULT

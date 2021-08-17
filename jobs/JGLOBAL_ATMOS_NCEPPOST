@@ -30,9 +30,11 @@ status=$?
 ##############################################
 # Obtain unique process id (pid) and make temp directory
 ##############################################
+export CDATE=${CDATE:-${PDY}${cyc}}
+export CDUMP=${CDUMP:-${RUN:-"gfs"}}
 export pid=${pid:-$$}
 export outid=${outid:-"LL$job"}
-export DATA=${DATA:-${DATAROOT}/${jobid:?}}
+export DATA=${DATA:-${DATAROOT}/$CDATE/$CDUMP/${jobid:?}}
 mkdir -p $DATA
 cd $DATA
 
@@ -62,8 +64,8 @@ export g2tmpl_ver=${g2tmpl_ver:-v1.5.0}
 ##############################################
 # Set variables used in the exglobal script
 ##############################################
-export CDATE=${CDATE:-${PDY}${cyc}}
-export CDUMP=${CDUMP:-${RUN:-"gfs"}}
+#export CDATE=${CDATE:-${PDY}${cyc}}
+#export CDUMP=${CDUMP:-${RUN:-"gfs"}}
 export COMPONENT=${COMPONENT:-atmos}
 if [ $RUN_ENVIR = "nco" ]; then
     export ROTDIR=${COMROOT:?}/$NET/$envir

@@ -77,7 +77,7 @@
       use params_mod, only: GI, G
       use ctlblk_mod, only: JSTA, JEND, SPVAL, JSTA_2L, JEND_2U, LM, JSTA_M, &
                             JEND_M, HTFD, NFD, IM, JM, NBIN_DU, gocart_on,   &
-                            MODELNAME
+                            MODELNAME,nasa_on
       use gridspec_mod, only: GRIDTYPE
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       implicit none
@@ -123,7 +123,7 @@
           ENDDO
         ENDDO
       ENDDO
-      if (gocart_on) then
+      if (gocart_on .or. nasa_on) then
         DO N = 1, NBIN_DU
           DO IFD = 1,NFD
             DO J=JSTA,JEND
@@ -249,7 +249,7 @@
                 PFD(I,J,IFD) = PMID(I,J,L) - (PMID(I,J,L)-PMID(I,J,L+1))*RDZ*DZABH(IFD)
                 ICINGFD(I,J,IFD) = ICING_GFIP(I,J,L) - &
                  (ICING_GFIP(I,J,L)-ICING_GFIP(I,J,L+1))*RDZ*DZABH(IFD)
-                if (gocart_on) then
+                if (gocart_on .or. nasa_on) then
                   DO N = 1, NBIN_DU
                     AERFD(I,J,IFD,N) = DUST(I,J,L,N) - &
                         (DUST(I,J,L,N)-DUST(I,J,L+1,N))*RDZ*DZABH(IFD)
@@ -260,7 +260,7 @@
                 QFD(I,J,IFD) = Q(I,J,L)
                 PFD(I,J,IFD) = PMID(I,J,L)
                 ICINGFD(I,J,IFD) = ICING_GFIP(I,J,L)
-                if (gocart_on) then
+                if (gocart_on .or. nasa_on) then
                   DO N = 1, NBIN_DU
                     AERFD(I,J,IFD,N) = DUST(I,J,L,N)
                   ENDDO
@@ -389,7 +389,7 @@
                  PFD(I,J,IFD) = PMID(I,J,L) - (PMID(I,J,L)-PMID(I,J,L+1))*RDZ*DZABH(IFD)
                  ICINGFD(I,J,IFD) = ICING_GFIP(I,J,L) - &
                    (ICING_GFIP(I,J,L)-ICING_GFIP(I,J,L+1))*RDZ*DZABH(IFD)
-                 if (gocart_on) then
+                 if (gocart_on .or. nasa_on) then
                    DO N = 1, NBIN_DU
                      AERFD(I,J,IFD,N) = DUST(I,J,L,N) - &
                     (DUST(I,J,L,N)-DUST(I,J,L+1,N))*RDZ*DZABH(IFD)
@@ -400,7 +400,7 @@
                  QFD(I,J,IFD) = Q(I,J,L)
                  PFD(I,J,IFD) = PMID(I,J,L)
                  ICINGFD(I,J,IFD) = ICING_GFIP(I,J,L)
-                 if (gocart_on) then
+                 if (gocart_on .or. nasa_on) then
                    DO N = 1, NBIN_DU
                      AERFD(I,J,IFD,N) = DUST(I,J,L,N)
                    ENDDO

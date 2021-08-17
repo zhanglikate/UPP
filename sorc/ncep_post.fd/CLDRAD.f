@@ -123,7 +123,7 @@
                             FLD_INFO, AVRAIN, THEAT, IFHR, IFMIN, AVCNVC,     &
                             TCLOD, ARDSW, TRDSW, ARDLW, NBIN_DU, TRDLW, IM,   &
                             NBIN_SS, NBIN_OC, NBIN_BC, NBIN_SU, DTQ2,         &
-                            JM, LM, gocart_on, me
+                            JM, LM, gocart_on, nasa_on, me
       use rqstfld_mod, only: IGET, ID, LVLS, IAVBLFLD
       use gridspec_mod, only: dyval, gridtype
       use cmassi_mod,  only: TRAD_ice
@@ -4344,7 +4344,7 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
          endif
       ENDIF
 !
-      if (gocart_on) then
+      if (gocart_on .or. nasa_on) then
 !
 !***  BLOCK 4. GOCART AEROSOL FIELDS
 !

@@ -81,7 +81,7 @@
                             ALSL, JEND_M, SMFLAG, GRIB, CFLD, FLD_INFO, DATAPD,&
                             TD3D, IFHR, IFMIN, IM, JM, NBIN_DU, JSTA_2L,       &
                             JEND_2U, LSM, d3d_on, gocart_on, ioform, NBIN_SM,  &
-                            imp_physics
+                            imp_physics,nasa_on
       use rqstfld_mod, only: IGET, LVLS, ID, IAVBLFLD, LVLSXML
       use gridspec_mod, only: GRIDTYPE, MAPTYPE, DXVAL
       use upp_physics, only: FPVSNEW, CALRH
@@ -159,7 +159,7 @@
           enddo
         enddo
       endif
-      if (gocart_on) then
+      if (gocart_on .or. nasa_on) then
         if (.not. allocated(dustsl)) allocate(dustsl(im,jm,nbin_du))
 !$omp parallel do private(i,j,l)
         do l=1,nbin_du
@@ -360,7 +360,7 @@
                  IF(O3(I,J,1)      < SPVAL) O3SL(I,J)  = O3(I,J,1)
                  IF(CFR(I,J,1)     < SPVAL) CFRSL(I,J) = CFR(I,J,1)
 ! DUST
-                 if (gocart_on) then
+                 if (gocart_on .or. nasa_on) then
                    DO K = 1, NBIN_DU
                      IF(DUST(I,J,1,K) < SPVAL) DUSTSL(I,J,K) = DUST(I,J,1,K)
                    ENDDO
@@ -522,7 +522,7 @@
                  IF(CFR(I,J,LL) < SPVAL .AND. CFR(I,J,LL-1) < SPVAL)          &
                    CFRSL(I,J) = CFR(I,J,LL) + (CFR(I,J,LL)-CFR(I,J,LL-1))*FACT 
 ! DUST
-                 if (gocart_on) then
+                 if (gocart_on .or. nasa_on) then
                    DO K = 1, NBIN_DU
                      IF(DUST(I,J,LL,K) < SPVAL .AND. DUST(I,J,LL-1,K) < SPVAL)   &
                      DUSTSL(I,J,K) = DUST(I,J,LL,K) + (DUST(I,J,LL,K)-DUST(I,J,LL-1,K))*FACT
@@ -2013,7 +2013,7 @@
              endif
           ENDIF
          ENDIF
-         if (gocart_on) then
+         if (gocart_on .or. nasa_on) then
 !--- DUST 
          IF (IGET(438) > 0) THEN
           IF (LVLS(LP,IGET(438)) > 0) THEN
