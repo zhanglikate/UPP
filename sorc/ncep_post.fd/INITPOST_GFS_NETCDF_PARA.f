@@ -901,7 +901,7 @@
 
            dustallcb(i,j)=dustallcb(i,j)+ &
            (dust(i,j,l,1)+dust(i,j,l,2)+ &
-           dust(i,j,l,3)+0.67*dust(i,j,l,4))* &
+           dust(i,j,l,3)+0.74*dust(i,j,l,4))* &
            dpres(i,j,l)/grav
            enddo
            enddo
@@ -945,12 +945,12 @@
           salt(i,j,l,5)=dt5(i,j,l)
 
             sscb(i,j)=sscb(i,j)+ &
-         (dt1(i,j,l)+dt2(i,j,l)+0.75*dt3(i,j,l))*  &
+         (dt1(i,j,l)+dt2(i,j,l)+0.83*dt3(i,j,l))*  &
            dpres(i,j,l)/grav
 
 
           ssallcb(i,j)=ssallcb(i,j)+ &
-         (dt1(i,j,l)+dt2(i,j,l)+dt3(i,j,l)+dt4(i,j,l)*0.83)* &
+         (dt1(i,j,l)+dt2(i,j,l)+dt3(i,j,l)+dt4(i,j,l))* &
            dpres(i,j,l)/grav
            enddo
            enddo
@@ -1138,8 +1138,7 @@
 !      PM10 concentration
        dusmass(i,j)=(dust(i,j,l,1)+dust(i,j,l,2)+dust(i,j,l,3)+ &
        0.74*dust(i,j,l,4)+salt(i,j,l,1)+salt(i,j,l,2)+salt(i,j,l,3)+ &
-       salt(i,j,l,4) + &
-       salt(i,j,l,5)+soot(i,j,l,1)+soot(i,j,l,2)+waso(i,j,l,1)+ &
+       salt(i,j,l,4) +soot(i,j,l,1)+soot(i,j,l,2)+waso(i,j,l,1)+ &
        waso(i,j,l,2) +suso(i,j,l,1)+pp25(i,j,l,1)+pp10(i,j,l,1)) &
        *RHOMID(i,j,l)  !ug/m3
 !      PM25 concentration       
