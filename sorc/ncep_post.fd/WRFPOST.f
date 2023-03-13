@@ -114,7 +114,7 @@
               ista, iend, ista_m, iend_m, ista_2l, iend_2u,                                          &
               jsta, jend, jsta_m, jend_m, jsta_2l, jend_2u, novegtype, icount_calmict, npset, datapd,&
               lsm, fld_info, etafld2_tim, eta2p_tim, mdl2sigma_tim, cldrad_tim, miscln_tim,          &
-              mdl2agl_tim, mdl2std_tim, mdl2thandpv_tim, calrad_wcloud_tim,nasa_on,                  &
+              mdl2agl_tim, mdl2std_tim, mdl2thandpv_tim, calrad_wcloud_tim,nasa_on,gccpp_on,         &
               fixed_tim, time_output, imin, surfce2_tim, komax, ivegsrc, d3d_on, gocart_on,rdaod,    &
               readxml_tim, spval, fullmodelname, submodelname, hyb_sigp, filenameflat, aqfcmaq_on,numx
       use grib2_module,   only: gribit2,num_pset,nrecout,first_grbtbl,grib_info_finalize
@@ -141,7 +141,7 @@
 !
       integer      :: kpo,kth,kpv
       real,dimension(komax) :: po,th,pv
-      namelist/nampgb/kpo,po,kth,th,kpv,pv,fileNameAER,d3d_on,gocart_on,nasa_on,popascal &
+      namelist/nampgb/kpo,po,kth,th,kpv,pv,fileNameAER,d3d_on,gocart_on,gccpp_on, nasa_on,popascal &
                      ,hyb_sigp,rdaod,aqfcmaq_on,vtimeunits,numx
       integer      :: itag_ierr
       namelist/model_inputs/fileName,IOFORM,grib,DateStr,MODELNAME,SUBMODELNAME &
@@ -260,13 +260,12 @@
         hyb_sigp    = .true.
         d3d_on      = .false.
         gocart_on   = .false.
+        gccpp_on    = .false.
         nasa_on     = .false.
         aqfcmaq_on  = .false.
         popascal    = .false.
         fileNameAER = ''
         rdaod       = .false.
-!       gocart_on   = .true.
-!       d3d_on      = .true.
 
 !set control file name
         fileNameFlat='postxconfig-NT.txt'

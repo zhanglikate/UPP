@@ -72,7 +72,7 @@
               jend_m, imin, imp_physics, dt, spval, pdtop, pt, qmin, nbin_du, nphs, dtq2, ardlw,&
               ardsw, asrfc, avrain, avcnvc, theat, gdsdegr, spl, lsm, alsl, im, jm, im_jm, lm,  &
               jsta_2l, jend_2u, nsoil, lp1, icu_physics, ivegsrc, novegtype, nbin_ss, nbin_bc,  &
-              nbin_oc, nbin_su, gocart_on, pt_tbl, hyb_sigp, filenameFlux, fileNameAER, &
+              nbin_oc, nbin_su, gocart_on, gccpp_on, pt_tbl, hyb_sigp, filenameFlux, fileNameAER, &
               iSF_SURFACE_PHYSICS
       use gridspec_mod, only: maptype, gridtype, latstart, latlast, lonstart, lonlast, cenlon,  &
               dxval, dyval, truelat2, truelat1, psmapf, cenlat
@@ -1331,8 +1331,9 @@
 !      deallocate(wrk1,wrk2)
 
 
-      print *, 'gocart_on2=',gocart_on
-      if (gocart_on) then
+      print *, 'gocart_on=',gocart_on
+      print *, 'gccpp_on=',gccpp_on
+      if (gocart_on .or. gccpp_on) then
 
 ! GFS output dust in nemsio (GOCART)
         dustcb=0.0

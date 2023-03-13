@@ -73,7 +73,7 @@
               ardsw, asrfc, avrain, avcnvc, theat, gdsdegr, spl, lsm, alsl, im, jm, im_jm, lm,  &
               jsta_2l, jend_2u, nsoil, lp1, icu_physics, ivegsrc, novegtype, nbin_ss, nbin_bc,  &
               nbin_oc, nbin_su, nbin_no3, nbin_nh4, gocart_on, nasa_on, pt_tbl, hyb_sigp,       &
-              filenameFlux, fileNameAER,                                                        &
+              filenameFlux, fileNameAER,gccpp_on,                                               &
               iSF_SURFACE_PHYSICS,rdaod, aqfcmaq_on, modelname,                                 &
               ista, iend, ista_2l, iend_2u,iend_m
       use gridspec_mod, only: maptype, gridtype, latstart, latlast, lonstart, lonlast, cenlon,  &
@@ -1698,8 +1698,9 @@
 
       
       print *, 'gocart_on=',gocart_on
+      print *, 'gccpp_on=',gccpp_on
       print *, 'nasa_on=',nasa_on
-      if (gocart_on .or. nasa_on) then
+      if (gocart_on .or.gccpp_on .or. nasa_on) then
 
 ! GFS output dust in nemsio (GOCART)
         dustcb=0.0
@@ -1851,7 +1852,7 @@
         sulfcb=0.0
 
 !       SUSO = SPVAL
-        if (gocart_on) then
+        if (gocart_on .or. gccpp_on) then
         VarName='sulf'
         endif
 
@@ -1929,7 +1930,7 @@
 ! GFS output pp25 in nemsio (GOCART)
         pp25cb=0.0
 
-        if (gocart_on) then
+        if (gocart_on .or. gccpp_on) then
         VarName='pp25'
         endif
 
@@ -1942,7 +1943,7 @@
 
 ! GFS output pp10 in nemsio (GOCART)
         pp10cb=0.0
-        if (gocart_on) then
+        if (gocart_on .or. gccpp_on) then
         VarName='pp10'
         endif
 
@@ -2042,7 +2043,7 @@
        sspm(i,j)=(salt(i,j,l,1)+salt(i,j,l,2)+ &
        0.83*salt(i,j,l,3))*RHOMID(i,j,l)  !ug/m3 
 
-       if (gocart_on) then
+       if (gocart_on .or. gccpp_on) then
 !      PM10 concentration
        dusmass(i,j)=(dust(i,j,l,1)+dust(i,j,l,2)+dust(i,j,l,3)+ &
        0.74*dust(i,j,l,4)+salt(i,j,l,1)+salt(i,j,l,2)+salt(i,j,l,3)+ &
@@ -3847,8 +3848,9 @@
 
 
       print *, 'gocart_on=',gocart_on
+      print *, 'gccpp_on=',gccpp_on
       print *, 'nasa_on=',nasa_on
-      if (gocart_on) then
+      if (gocart_on .or. gccpp_on) then
 
 
 ! retrieve dust emission fluxes

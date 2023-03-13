@@ -463,7 +463,7 @@
       deallocate(gtg)
 
 !
-      if (gocart_on .or. nasa_on) then
+      if (gocart_on .or. gccpp_on .or. nasa_on) then
 ! Deallocate GOCART fields
 ! vrbls4d
         deallocate(dust)
