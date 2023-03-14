@@ -29,6 +29,8 @@
 !> 2022-01-14 | W Meng                    | Remove interfaces INITPOST_GS_NEMS, INITPOST_NEMS_MPIIO, INITPOST_NMM and INITPOST_GFS_NETCDF
 !> 2022-03-15 | W Meng                    | Unify FV3 based interfaces
 !> 2022-09-22 | L Zhang                   | Add option of nasa_on to process ufs-aerosols
+!> 2022-11-08 | K Wang                    | Replace aqfamaq_on with aqf_on
+!> 2023-01-24 | Sam Trahan                | write_ifi_debug_files flag for IFI debug capability
 !>
 !> @author Mike Bladwin NSSL/SPC @date 2002-06-18
       PROGRAM WRFPOST
@@ -116,8 +118,10 @@
               lsm, fld_info, etafld2_tim, eta2p_tim, mdl2sigma_tim, cldrad_tim, miscln_tim,          &
               mdl2agl_tim, mdl2std_tim, mdl2thandpv_tim, calrad_wcloud_tim,nasa_on,gccpp_on,         &
               fixed_tim, time_output, imin, surfce2_tim, komax, ivegsrc, d3d_on, gocart_on,rdaod,    &
-              readxml_tim, spval, fullmodelname, submodelname, hyb_sigp, filenameflat, aqfcmaq_on,numx
+              readxml_tim, spval, fullmodelname, submodelname, hyb_sigp, filenameflat, aqf_on,numx,  &
+              run_ifi_tim
       use grib2_module,   only: gribit2,num_pset,nrecout,first_grbtbl,grib_info_finalize
+      use upp_ifi_mod, only: write_ifi_debug_files
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
       implicit none
 !
@@ -142,7 +146,7 @@
       integer      :: kpo,kth,kpv
       real,dimension(komax) :: po,th,pv
       namelist/nampgb/kpo,po,kth,th,kpv,pv,fileNameAER,d3d_on,gocart_on,gccpp_on, nasa_on,popascal &
-                     ,hyb_sigp,rdaod,aqfcmaq_on,vtimeunits,numx
+                     ,hyb_sigp,rdaod,aqf_on,vtimeunits,numx,write_ifi_debug_files
       integer      :: itag_ierr
       namelist/model_inputs/fileName,IOFORM,grib,DateStr,MODELNAME,SUBMODELNAME &
                      ,fileNameFlux,fileNameFlat
@@ -262,7 +266,7 @@
         gocart_on   = .false.
         gccpp_on    = .false.
         nasa_on     = .false.
-        aqfcmaq_on  = .false.
+        aqf_on      = .false.
         popascal    = .false.
         fileNameAER = ''
         rdaod       = .false.
@@ -271,6 +275,7 @@
         fileNameFlat='postxconfig-NT.txt'
         read(5,nampgb,iostat=iret,end=119)
  119    continue
+       if (me==0) print*,'in itag, write_ifi_debug_files=', write_ifi_debug_files
        if (me==0) print*,'in itag, mod(num_procs,numx)=', mod(num_procs,numx)
        if(mod(num_procs,numx)/=0) then
          if (me==0) then
@@ -765,6 +770,7 @@
          print*, 'FIXED_tim = ',FIXED_tim
          print*, 'MDL2THANDPV_tim =  ',MDL2THANDPV_tim
          print*, 'CALRAD_WCLOUD_tim = ',CALRAD_WCLOUD_tim    
+         print*, 'RUN_IFI_tim = ',RUN_IFI_tim
          print*, 'Total time = ',(mpi_wtime() - bbtim)
          print*, 'Time for OUTPUT = ',time_output
          print*, 'Time for READxml = ',READxml_tim

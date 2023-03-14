@@ -20,6 +20,8 @@
 !!                      two arrays are involved in GSL visibility computation.
 !! -  22-03-22  Wen Meng - Initializing pwat.
 !! -  22-09-22  Li(Kate) Zhang - Initializing NASA GOCART tracers of Nitrate, NH4,and their column burden.
+!! -  22-11-08  Kai Wang - Replace acfcmaq_on with aqf_on
+!! -  23-01-24  Sam Trahan - CAPE, CIN, and IFI_APCP varibles for input to IFI
 !!
 !!   OUTPUT FILES:
 !!   - STDOUT  - RUN TIME STANDARD OUT.
@@ -31,6 +33,7 @@
 !!
       SUBROUTINE ALLOCATE_ALL()
 !
+      use upp_ifi_mod, only: set_ifi_dims
       use vrbls4d
       use vrbls3d
       use vrbls2d
@@ -77,6 +80,8 @@
       allocate(tcucn(ista_2l:iend_2u,jsta_2l:jend_2u,lm))
       allocate(EL_PBL(ista_2l:iend_2u,jsta_2l:jend_2u,lm))
 
+      call set_ifi_dims() ! set ifi_nflight and ifi_flight_levels
+      
 !Initialization
 !$omp parallel do private(i,j,l)
       do l=1,lm
@@ -116,7 +121,7 @@
             exch_h(i,j,l)=spval 
             train(i,j,l)=spval 
             tcucn(i,j,l)=spval 
-            EL_PBL(i,j,l)=spval 
+            EL_PBL(i,j,l)=spval
           enddo
         enddo
       enddo
@@ -336,6 +341,9 @@
 !
 !     FROM VRBLS2D
 !
+      allocate(CAPE(ista_2l:iend_2u,jsta_2l:jend_2u))
+      allocate(CIN(ista_2l:iend_2u,jsta_2l:jend_2u))
+      allocate(IFI_APCP(ista_2l:iend_2u,jsta_2l:jend_2u))
 ! SRD
       allocate(wspd10max(ista_2l:iend_2u,jsta_2l:jend_2u))
       allocate(w_up_max(ista_2l:iend_2u,jsta_2l:jend_2u))
@@ -356,6 +364,9 @@
 !$omp parallel do private(i,j)
       do j=jsta_2l,jend_2u
         do i=ista_2l,iend_2u
+          CAPE(i,j)=spval
+          CIN(i,j)=spval
+          IFI_APCP(i,j)=spval
           wspd10max(i,j)=spval
           w_up_max(i,j)=spval
           w_dn_max(i,j)=spval
@@ -580,6 +591,9 @@
       allocate(snow_bucket1(ista_2l:iend_2u,jsta_2l:jend_2u))
       allocate(graup_bucket(ista_2l:iend_2u,jsta_2l:jend_2u))
       allocate(graup_bucket1(ista_2l:iend_2u,jsta_2l:jend_2u))
+      allocate(frzrn_bucket(ista_2l:iend_2u,jsta_2l:jend_2u))
+      allocate(snow_acm(ista_2l:iend_2u,jsta_2l:jend_2u))
+      allocate(snow_bkt(ista_2l:iend_2u,jsta_2l:jend_2u))
       allocate(qrmax(ista_2l:iend_2u,jsta_2l:jend_2u))
       allocate(tmax(ista_2l:iend_2u,jsta_2l:jend_2u))
       allocate(snownc(ista_2l:iend_2u,jsta_2l:jend_2u))
@@ -590,9 +604,10 @@
       allocate(qvl1(ista_2l:iend_2u,jsta_2l:jend_2u))
       allocate(snfden(ista_2l:iend_2u,jsta_2l:jend_2u))
       allocate(sndepac(ista_2l:iend_2u,jsta_2l:jend_2u))
-      allocate(int_smoke(ista_2l:iend_2u,jsta_2l:jend_2u))
       allocate(mean_frp(ista_2l:iend_2u,jsta_2l:jend_2u))
-      allocate(int_aod(ista_2l:iend_2u,jsta_2l:jend_2u))
+      allocate(ebb(ista_2l:iend_2u,jsta_2l:jend_2u))
+      allocate(hwp(ista_2l:iend_2u,jsta_2l:jend_2u))
+      allocate(aodtot(ista_2l:iend_2u,jsta_2l:jend_2u))
 !Initialization
 !$omp parallel do private(i,j)
       do j=jsta_2l,jend_2u
@@ -617,18 +632,23 @@
           qvl1(i,j)=spval
           snfden(i,j)=spval
           sndepac(i,j)=spval
-          int_smoke(i,j)=spval
           mean_frp(i,j)=spval
-          int_aod(i,j)=spval
+          ebb(i,j)=spval
+          hwp(i,j)=spval
+          aodtot(i,j)=spval
         enddo
       enddo
       allocate(smoke(ista_2l:iend_2u,jsta_2l:jend_2u,lm,nbin_sm))
+      allocate(fv3dust(ista_2l:iend_2u,jsta_2l:jend_2u,lm,nbin_sm))
+      allocate(coarsepm(ista_2l:iend_2u,jsta_2l:jend_2u,lm,nbin_sm))
 !$omp parallel do private(i,j,l,k)
       do k=1,nbin_sm
         do l=1,lm
           do j=jsta_2l,jend_2u
             do i=ista_2l,iend_2u
               smoke(i,j,l,k)=spval
+              fv3dust(i,j,l,k)=spval
+              coarsepm(i,j,l,k)=spval
             enddo
           enddo
         enddo
@@ -1370,20 +1390,29 @@
       enddo
 
 ! AQF
-      if (me == 0) print *,'aqfcmaq_on= ', aqfcmaq_on
-      if (aqfcmaq_on) then
+      if (me == 0) print *,'aqf_on= ', aqf_on
+      if (aqf_on) then
 
-      allocate(ozcon(ista_2l:iend_2u,jsta_2l:jend_2u,lm))
-      allocate(pmtf(ista_2l:iend_2u,jsta_2l:jend_2u,lm))
+      allocate(avgozcon(ista_2l:iend_2u,jsta_2l:jend_2u,lm))
+      allocate(avgpmtf(ista_2l:iend_2u,jsta_2l:jend_2u,lm))
+      allocate(aqm_aod550(ista_2l:iend_2u,jsta_2l:jend_2u))
 
 !Initialization
 !$omp parallel do private(i,j,l)
       do l=1,lm
         do j=jsta_2l,jend_2u
           do i=ista_2l,iend_2u
-             ozcon(i,j,l)=0.
-             pmtf(i,j,l)=0.
+             avgozcon(i,j,l)=spval
+             avgpmtf(i,j,l)=spval
           enddo
+        enddo
+      enddo
+
+!Initialization 
+!$omp parallel do private(i,j)
+      do j=jsta_2l,jend_2u
+        do i=ista_2l,iend_2u
+          aqm_aod550(i,j)=spval
         enddo
       enddo
 

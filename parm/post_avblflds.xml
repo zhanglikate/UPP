@@ -3678,30 +3678,30 @@
 
     <param>
        <post_avblfldidx>423</post_avblfldidx>
-       <shortname>MAX_MAXUVV_ON_SPEC_PRES_LVL_ABOVE_GRND_100-1000hpa</shortname>
+       <shortname>MAX_MAXUVV_ON_ISOBARIC_SFC_100-1000hpa</shortname>
        <longname>hourly maximum Upward Vertical Velocity between 100-1000hpa</longname>
        <pdstmpl>tmpl4_8</pdstmpl>
        <pname>MAXUVV</pname>
        <table_info>NCEP</table_info>
        <stats_proc>MAX</stats_proc>
-       <fixed_sfc1_type>spec_pres_above_grnd</fixed_sfc1_type>
+       <fixed_sfc1_type>isobaric_sfc</fixed_sfc1_type>
        <level>10000.</level>
-       <fixed_sfc2_type>spec_pres_above_grnd</fixed_sfc2_type>
+       <fixed_sfc2_type>isobaric_sfc</fixed_sfc2_type>
        <level2>100000.</level2>
        <scale>-3.0</scale>
     </param>
 
     <param>
        <post_avblfldidx>424</post_avblfldidx>
-       <shortname>MAX_MAXDVV_ON_SPEC_PRES_LVL_ABOVE_GRND_100-1000hpa</shortname>
+       <shortname>MAX_MAXDVV_ON_ISOBARIC_SFC_100-1000hpa</shortname>
        <longname>hourly maximum Downward Vertical Velocity between 100-1000hpa</longname>
        <pdstmpl>tmpl4_8</pdstmpl>
        <pname>MAXDVV</pname>
        <stats_proc>MAX</stats_proc>
        <table_info>NCEP</table_info>
-       <fixed_sfc1_type>spec_pres_above_grnd</fixed_sfc1_type>
+       <fixed_sfc1_type>isobaric_sfc</fixed_sfc1_type>
        <level>10000.</level>
-       <fixed_sfc2_type>spec_pres_above_grnd</fixed_sfc2_type>
+       <fixed_sfc2_type>isobaric_sfc</fixed_sfc2_type>
        <level2>100000.</level2>
        <scale>-3.0</scale>
     </param>
@@ -3883,7 +3883,8 @@
     <param>
        <post_avblfldidx>445</post_avblfldidx>
        <shortname>MAPS_PRMSL_ON_MEAN_SEA_LVL</shortname>
-       <pname>PRMSL</pname>
+       <pname>MSLMA</pname>
+       <table_info>NCEP</table_info>
        <fixed_sfc1_type>mean_sea_lvl</fixed_sfc1_type>
        <scale>4.0</scale>
     </param>
@@ -6551,7 +6552,10 @@
     <param>
        <post_avblfldidx>702</post_avblfldidx>
        <shortname>GSD_MAX_LTG_THREAT1_ON_ENTIRE_ATMOS</shortname>
+       <pdstmpl>tmpl4_8</pdstmpl>
        <pname>LTGTHREAT1</pname>
+       <table_info>NCEP</table_info>
+       <stats_proc>MAX</stats_proc>
        <fixed_sfc1_type>entire_atmos</fixed_sfc1_type>
        <scale>3.0</scale>
     </param>
@@ -6559,7 +6563,10 @@
     <param>
        <post_avblfldidx>703</post_avblfldidx>
        <shortname>GSD_MAX_LTG_THREAT2_ON_ENTIRE_ATMOS</shortname>
+       <pdstmpl>tmpl4_8</pdstmpl>
        <pname>LTGTHREAT2</pname>
+       <table_info>NCEP</table_info>
+       <stats_proc>MAX</stats_proc>
        <fixed_sfc1_type>entire_atmos</fixed_sfc1_type>
        <scale>3.0</scale>
     </param>
@@ -6567,7 +6574,10 @@
     <param>
        <post_avblfldidx>704</post_avblfldidx>
        <shortname>GSD_MAX_LTG_THREAT3_ON_ENTIRE_ATMOS</shortname>
+       <pdstmpl>tmpl4_8</pdstmpl>
        <pname>LTNG</pname>
+       <table_info>NCEP</table_info>
+       <stats_proc>MAX</stats_proc>
        <fixed_sfc1_type>entire_atmos</fixed_sfc1_type>
        <scale>3.0</scale>
     </param>
@@ -6633,6 +6643,19 @@
        <pname>CEIL</pname>
        <fixed_sfc1_type>cloud_base</fixed_sfc1_type>
        <scale>3.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>712</post_avblfldidx>
+       <shortname>AER_OPT_AQM_at550</shortname>
+       <pdstmpl>tmpl4_48</pdstmpl>
+       <pname>AOTK</pname>
+       <fixed_sfc1_type>entire_atmos_single_lyr</fixed_sfc1_type>
+       <aerosol_type>total_aerosol</aerosol_type>
+       <typ_intvl_size>smaller_than_first_limit</typ_intvl_size>
+       <scale_fact_1st_size>0</scale_fact_1st_size>
+       <scale_val_1st_size>0</scale_val_1st_size>
+       <scale>9.0</scale>
     </param>
 
     <param>
@@ -6758,36 +6781,52 @@
     <param>
        <post_avblfldidx>736</post_avblfldidx>
        <shortname>SMOKE_ON_ENTIRE_ATMOS_SINGLE_LYR</shortname>
-       <pdstmpl>tmpl4_0</pdstmpl>
+       <pdstmpl>tmpl4_48</pdstmpl>
        <pname>COLMD</pname>
+       <aerosol_type>particulate_org_matter_dry</aerosol_type>
        <fixed_sfc1_type>entire_atmos_single_lyr</fixed_sfc1_type>
+       <typ_intvl_size>smaller_than_first_limit</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
        <scale>5.0</scale>
     </param>
 
     <param>
        <post_avblfldidx>737</post_avblfldidx>
        <shortname>SMOKE_ON_HYBRID_LVL</shortname>
-       <pdstmpl>tmpl4_0</pdstmpl>
+       <pdstmpl>tmpl4_48</pdstmpl>
        <pname>MASSDEN</pname>
+       <aerosol_type>particulate_org_matter_dry</aerosol_type>
        <fixed_sfc1_type>hybrid_lvl</fixed_sfc1_type>
+       <typ_intvl_size>smaller_than_first_limit</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
        <scale>6.0</scale>
     </param>
 
     <param>
        <post_avblfldidx>738</post_avblfldidx>
        <shortname>SMOKE_ON_ISOBARIC_SFC</shortname>
-       <pdstmpl>tmpl4_0</pdstmpl>
+       <pdstmpl>tmpl4_48</pdstmpl>
        <pname>MASSDEN</pname>
+       <aerosol_type>particulate_org_matter_dry</aerosol_type>
        <fixed_sfc1_type>isobaric_sfc</fixed_sfc1_type>
+       <typ_intvl_size>smaller_than_first_limit</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
        <scale>6.0</scale>
     </param>
 
     <param>
        <post_avblfldidx>739</post_avblfldidx>
        <shortname>SMOKE_ON_SPEC_HGT_LVL_ABOVE_GRND_8m</shortname>
-       <pdstmpl>tmpl4_0</pdstmpl>
+       <pdstmpl>tmpl4_48</pdstmpl>
        <pname>MASSDEN</pname>
+       <aerosol_type>particulate_org_matter_dry</aerosol_type>
        <fixed_sfc1_type>spec_hgt_lvl_above_grnd</fixed_sfc1_type>
+       <typ_intvl_size>smaller_than_first_limit</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
        <level>8.</level>
        <scale>6.0</scale>
     </param>
@@ -6795,10 +6834,74 @@
     <param>
        <post_avblfldidx>740</post_avblfldidx>
        <shortname>MEAN_FIRE_RDIATV_PWR</shortname>
+       <pdstmpl>tmpl4_0</pdstmpl>
        <pname>CFNSF</pname>
        <table_info>NCEP</table_info>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>4.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>741</post_avblfldidx>
+       <shortname>DUST_ON_ENTIRE_ATMOS_SINGLE_LYR</shortname>
+       <pdstmpl>tmpl4_48</pdstmpl>
+       <pname>COLMD</pname>
+       <aerosol_type>dust_dry</aerosol_type>
+       <fixed_sfc1_type>entire_atmos_single_lyr</fixed_sfc1_type>
+       <typ_intvl_size>smaller_than_first_limit</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
+       <scale>5.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>742</post_avblfldidx>
+       <shortname>DUST_ON_HYBRID_LVL</shortname>
+       <pdstmpl>tmpl4_48</pdstmpl>
+       <pname>MASSDEN</pname>
+       <aerosol_type>dust_dry</aerosol_type>
+       <fixed_sfc1_type>hybrid_lvl</fixed_sfc1_type>
+       <typ_intvl_size>smaller_than_first_limit</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
+       <scale>6.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>743</post_avblfldidx>
+       <shortname>DUST_ON_ISOBARIC_SFC</shortname>
+       <pdstmpl>tmpl4_48</pdstmpl>
+       <pname>MASSDEN</pname>
+       <aerosol_type>dust_dry</aerosol_type>
+       <fixed_sfc1_type>isobaric_sfc</fixed_sfc1_type>
+       <typ_intvl_size>smaller_than_first_limit</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
+       <scale>6.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>744</post_avblfldidx>
+       <shortname>DUST_ON_SPEC_HGT_LVL_ABOVE_GRND_8m</shortname>
+       <pdstmpl>tmpl4_48</pdstmpl>
+       <pname>MASSDEN</pname>
+       <aerosol_type>dust_dry</aerosol_type>
+       <fixed_sfc1_type>spec_hgt_lvl_above_grnd</fixed_sfc1_type>
+       <typ_intvl_size>smaller_than_first_limit</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
+       <level>8.</level>
+       <scale>6.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>745</post_avblfldidx>
+       <shortname>BIOMASS_BURNING_EMISSIONS</shortname>
+       <pdstmpl>tmpl4_48</pdstmpl>
+       <pname>AEMFLX</pname>
+       <aerosol_type>particulate_org_matter_dry</aerosol_type>
+       <fixed_sfc1_type>surface</fixed_sfc1_type>
+       <scale>5.0</scale>
     </param>
 
    <param>
@@ -6882,6 +6985,15 @@
     </param>
 
     <param>
+       <post_avblfldidx>755</post_avblfldidx>
+       <shortname>HWP_ON_SURFACE</shortname>
+       <longname>Hourly Wildfire Potential on surface</longname>
+       <pname>FWINX</pname>
+       <fixed_sfc1_type>surface</fixed_sfc1_type>
+       <scale>5.0</scale>
+    </param>
+
+    <param>
        <post_avblfldidx>756</post_avblfldidx>
        <shortname>GSD_PRES_ON_HGHST_TROP_FRZ_LVL</shortname>
        <longname>GSD_pressure on Highest tropospheric freezing level</longname>
@@ -6937,6 +7049,22 @@
        <shortname>GSD_MIXR_ON_LFC</shortname>
        <pname>MIXR</pname>
        <fixed_sfc1_type>level_free_convection</fixed_sfc1_type>
+       <scale>3.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>764</post_avblfldidx>
+       <shortname>CSDLF_ON_SURFACE</shortname>
+       <pname>CSDLF</pname>
+       <fixed_sfc1_type>surface</fixed_sfc1_type>
+       <scale>3.0</scale>
+    </param>
+  
+    <param>
+       <post_avblfldidx>765</post_avblfldidx>
+       <shortname>CSULF_ON_SURFACE</shortname>
+       <pname>CSULF</pname>
+       <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>3.0</scale>
     </param>
 
@@ -7978,16 +8106,20 @@
     
     <param>
        <post_avblfldidx>994</post_avblfldidx>
-       <shortname>OZCON_ON_HYBRID_LVL</shortname>
+       <shortname>AVE_OZCON_ON_HYBRID_LVL</shortname>
+       <pdstmpl>tmpl4_8</pdstmpl>
        <pname>OZCON</pname>
+       <stats_proc>AVE</stats_proc>
        <fixed_sfc1_type>hybrid_lvl</fixed_sfc1_type>
        <scale>7.0</scale>
     </param>
     
     <param>
        <post_avblfldidx>995</post_avblfldidx>
-       <shortname>PM25TOT_ON_HYBRID_LVL</shortname>
+       <shortname>AVE_PM25TOT_ON_HYBRID_LVL</shortname>
+       <pdstmpl>tmpl4_8</pdstmpl>
        <pname>PMTF</pname>
+       <stats_proc>AVE</stats_proc>
        <fixed_sfc1_type>hybrid_lvl</fixed_sfc1_type>
        <scale>7.0</scale>
     </param>
@@ -8062,5 +8194,153 @@
        <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>3.0</scale>
     </param>  
+
+    <param>
+       <post_avblfldidx>1003</post_avblfldidx>
+       <shortname>BUCKET_FRAIN_ON_SURFACE</shortname>
+       <pdstmpl>tmpl4_8</pdstmpl>
+       <pname>FRZR</pname>
+       <table_info>NCEP</table_info>
+       <stats_proc>ACM</stats_proc>
+       <fixed_sfc1_type>surface</fixed_sfc1_type>
+       <scale>4.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>1004</post_avblfldidx>
+       <shortname>ACM_SNOWFALL_ON_SURFACE</shortname>
+       <pdstmpl>tmpl4_8</pdstmpl>
+       <pname>TSNOWP</pname>
+       <stats_proc>ACM</stats_proc>
+       <fixed_sfc1_type>surface</fixed_sfc1_type>
+       <scale>4.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>1005</post_avblfldidx>
+       <shortname>BUCKET_SNOWFALL_ON_SURFACE</shortname>
+       <pdstmpl>tmpl4_8</pdstmpl>
+       <pname>TSNOWP</pname>
+       <stats_proc>ACM</stats_proc>
+       <fixed_sfc1_type>surface</fixed_sfc1_type>
+       <scale>4.0</scale>
+    </param>
+    
+    <param>
+       <post_avblfldidx>1006</post_avblfldidx>
+       <shortname>SDEN_ON_SURFACE</shortname>
+       <pname>SDEN</pname>
+       <fixed_sfc1_type>surface</fixed_sfc1_type>
+       <scale>6.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>1007</post_avblfldidx>
+       <shortname>ICE_PROB_IFI_FLIGHT_LEVEL</shortname>
+       <pname>ICPRB</pname>
+       <table_info>NCEP</table_info>
+       <fixed_sfc1_type>spec_alt_above_mean_sea_lvl</fixed_sfc1_type>
+       <scale>4.0</scale>
+       <!-- Level units are in 0.1 feet, so final output will be in units of 0.1 meters -->
+       <scale_fact_fixed_sfc1>1</scale_fact_fixed_sfc1>
+       <level>5000. 10000. 15000. 20000. 25000. 30000. 35000. 40000. 45000. 50000. 55000. 60000. 65000. 70000. 75000. 80000. 85000. 90000. 95000. 100000. 105000. 110000. 115000. 120000. 125000. 130000. 135000. 140000. 145000. 150000. 155000. 160000. 165000. 170000. 175000. 180000. 185000. 190000. 195000. 200000. 205000. 210000. 215000. 220000. 225000. 230000. 235000. 240000. 245000. 250000. 255000. 260000. 265000. 270000. 275000. 280000. 285000. 290000. 295000. 300000.</level>
+    </param>
+
+    <param>
+       <post_avblfldidx>1008</post_avblfldidx>
+       <shortname>SLD_IFI_FLIGHT_LEVEL</shortname>
+       <pname>SIPD</pname>
+       <table_info>NCEP</table_info>
+       <fixed_sfc1_type>spec_alt_above_mean_sea_lvl</fixed_sfc1_type>
+       <scale>4.0</scale>
+       <!-- Level units are in 0.1 feet, so final output will be in units of 0.1 meters -->
+       <scale_fact_fixed_sfc1>1</scale_fact_fixed_sfc1>
+       <level>5000. 10000. 15000. 20000. 25000. 30000. 35000. 40000. 45000. 50000. 55000. 60000. 65000. 70000. 75000. 80000. 85000. 90000. 95000. 100000. 105000. 110000. 115000. 120000. 125000. 130000. 135000. 140000. 145000. 150000. 155000. 160000. 165000. 170000. 175000. 180000. 185000. 190000. 195000. 200000. 205000. 210000. 215000. 220000. 225000. 230000. 235000. 240000. 245000. 250000. 255000. 260000. 265000. 270000. 275000. 280000. 285000. 290000. 295000. 300000.</level>
+    </param>
+
+    <param>
+       <post_avblfldidx>1009</post_avblfldidx>
+       <shortname>ICE_SEV_CAT_IFI_FLIGHT_LEVEL</shortname>
+       <pname>ICSEV</pname>
+       <table_info>NCEP</table_info>
+       <fixed_sfc1_type>spec_alt_above_mean_sea_lvl</fixed_sfc1_type>
+       <scale>4.0</scale>
+       <!-- Level units are in 0.1 feet, so final output will be in units of 0.1 meters -->
+       <scale_fact_fixed_sfc1>1</scale_fact_fixed_sfc1>
+       <level>5000. 10000. 15000. 20000. 25000. 30000. 35000. 40000. 45000. 50000. 55000. 60000. 65000. 70000. 75000. 80000. 85000. 90000. 95000. 100000. 105000. 110000. 115000. 120000. 125000. 130000. 135000. 140000. 145000. 150000. 155000. 160000. 165000. 170000. 175000. 180000. 185000. 190000. 195000. 200000. 205000. 210000. 215000. 220000. 225000. 230000. 235000. 240000. 245000. 250000. 255000. 260000. 265000. 270000. 275000. 280000. 285000. 290000. 295000. 300000.</level>
+    </param>
+
+    <param>
+       <post_avblfldidx>1010</post_avblfldidx>
+       <shortname>WMO_ICE_SEV_CAT_IFI_FLIGHT_LEVEL</shortname>
+       <pname>ICESEV</pname>
+       <fixed_sfc1_type>spec_alt_above_mean_sea_lvl</fixed_sfc1_type>
+       <scale>4.0</scale>
+       <!-- Level units are in 0.1 feet, so final output will be in units of 0.1 meters -->
+       <scale_fact_fixed_sfc1>1</scale_fact_fixed_sfc1>
+       <level>5000. 10000. 15000. 20000. 25000. 30000. 35000. 40000. 45000. 50000. 55000. 60000. 65000. 70000. 75000. 80000. 85000. 90000. 95000. 100000. 105000. 110000. 115000. 120000. 125000. 130000. 135000. 140000. 145000. 150000. 155000. 160000. 165000. 170000. 175000. 180000. 185000. 190000. 195000. 200000. 205000. 210000. 215000. 220000. 225000. 230000. 235000. 240000. 245000. 250000. 255000. 260000. 265000. 270000. 275000. 280000. 285000. 290000. 295000. 300000.</level>
+    </param>
+
+    <param>
+       <post_avblfldidx>1011</post_avblfldidx>
+       <shortname>COARSEPM_ON_ENTIRE_ATMOS_SINGLE_LYR</shortname>
+       <pdstmpl>tmpl4_48</pdstmpl>
+       <pname>COLMD</pname>
+       <aerosol_type>dust_dry</aerosol_type>
+       <fixed_sfc1_type>entire_atmos_single_lyr</fixed_sfc1_type>
+       <typ_intvl_size>between_first_second_limit_noincl2ndlmt</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
+       <scale_fact_2nd_size>7</scale_fact_2nd_size>
+       <scale_val_2nd_size>100</scale_val_2nd_size>
+       <scale>5.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>1012</post_avblfldidx>
+       <shortname>COARSEPM_ON_HYBRID_LVL</shortname>
+       <pdstmpl>tmpl4_48</pdstmpl>
+       <pname>MASSDEN</pname>
+       <aerosol_type>dust_dry</aerosol_type>
+       <fixed_sfc1_type>hybrid_lvl</fixed_sfc1_type>
+       <typ_intvl_size>between_first_second_limit_noincl2ndlmt</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
+       <scale_fact_2nd_size>7</scale_fact_2nd_size>
+       <scale_val_2nd_size>100</scale_val_2nd_size>
+       <scale>6.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>1013</post_avblfldidx>
+       <shortname>COARSEPM_ON_ISOBARIC_SFC</shortname>
+       <pdstmpl>tmpl4_48</pdstmpl>
+       <pname>MASSDEN</pname>
+       <aerosol_type>dust_dry</aerosol_type>
+       <fixed_sfc1_type>isobaric_sfc</fixed_sfc1_type>
+       <typ_intvl_size>between_first_second_limit_noincl2ndlmt</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
+       <scale_fact_2nd_size>7</scale_fact_2nd_size>
+       <scale_val_2nd_size>100</scale_val_2nd_size>
+       <scale>6.0</scale>
+    </param>
+
+    <param>
+       <post_avblfldidx>1014</post_avblfldidx>
+       <shortname>COARSEPM_ON_SPEC_HGT_LVL_ABOVE_GRND_8m</shortname>
+       <pdstmpl>tmpl4_48</pdstmpl>
+       <pname>MASSDEN</pname>
+       <aerosol_type>dust_dry</aerosol_type>
+       <fixed_sfc1_type>spec_hgt_lvl_above_grnd</fixed_sfc1_type>
+       <level>8.</level>
+       <typ_intvl_size>between_first_second_limit_noincl2ndlmt</typ_intvl_size>
+       <scale_fact_1st_size>7</scale_fact_1st_size>
+       <scale_val_1st_size>25</scale_val_1st_size>
+       <scale_fact_2nd_size>7</scale_fact_2nd_size>
+       <scale_val_2nd_size>100</scale_val_2nd_size>
+       <scale>6.0</scale>
+    </param>
+
   </post_avblflds>
 </postxml>

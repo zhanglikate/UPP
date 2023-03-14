@@ -42,6 +42,11 @@
 !! -  21-10-31  J MENG    - 2D DECOMPOSITION
 !! -  22-02-01  E JAMES - Cleaning up GRIB2 encoding for six variables
 !!                        that cause issues with newer wgrib2 builds in RRFS system.
+!! -  22-11-16  E JAMES - Adding dust from RRFS
+!! -  22-12-23  E Aligo - Read six winter weather diagnostics from model.
+!! -  23-01-24  Sam Trahan - store hourly accumulated precip for IFI and bucket time
+!! -  23-02-11  W Meng  - Add fix of time accumulation in bucket graupel for FV3 based models
+!! -  23-02-23  E James - Adding coarse PM from RRFS
 !!     
 !! USAGE:    CALL SURFCE
 !!   INPUT ARGUMENT LIST:
@@ -68,7 +73,7 @@
 !     
 !     INCLUDE GRID DIMENSIONS.  SET/DERIVE OTHER PARAMETERS.
 !
-      use vrbls4d, only: smoke
+      use vrbls4d, only: smoke, fv3dust, coarsepm
       use vrbls3d, only: zint, pint, t, pmid, q, f_rimef
       use vrbls2d, only: ths, qs, qvg, qv2m, tsnow, tg, smstav, smstot,       &
                          cmc, sno, snoavg, psfcavg, t10avg, snonc, ivgtyp,    &
@@ -92,8 +97,9 @@
                          acond,maxqshltr,minqshltr,avgpotevp,AVGPREC_CONT,    &
                          AVGCPRATE_CONT,sst,pcp_bucket1,rainnc_bucket1,       &
                          snow_bucket1, rainc_bucket1, graup_bucket1,          &
+                         frzrn_bucket, snow_acm, snow_bkt,                    &
                          shdmin, shdmax, lai, ch10,cd10,landfrac,paha,pahi,   &
-                         tecan,tetran,tedir,twa
+                         tecan,tetran,tedir,twa,IFI_APCP
       use soil,    only: stc, sllevel, sldpth, smc, sh2o
       use masks,   only: lmh, sm, sice, htm, gdlat, gdlon
       use physcons_post,only: CON_EPS, CON_EPSM1
@@ -162,7 +168,7 @@
       character(len=256) :: ffgfile
       character(len=256) :: arifile
 
-      logical file_exists
+      logical file_exists, need_ifi
 
       logical, parameter :: debugprint = .false.
 
@@ -468,13 +474,21 @@
             cfld=cfld+1
             fld_info(cfld)%ifld=IAVBLFLD(IGET(725))
             fld_info(cfld)%ntrange=1
-            fld_info(cfld)%tinvstat=IFHR-ID(18)
+            fld_info(cfld)%tinvstat=IFHR
 !$omp parallel do private(i,j,ii,jj)
             do j=1,jend-jsta+1
               jj = jsta+j-1
               do i=1,iend-ista+1
               ii = ista+i-1
-                datapd(i,j,cfld) =  SNDEPAC(ii,jj)
+              if(SNDEPAC(ii,jj)<spval) then
+                if(MODELNAME=='FV3R') then
+                  datapd(i,j,cfld) = SNDEPAC(ii,jj)/(1E3)
+                else
+                  datapd(i,j,cfld) = SNDEPAC(ii,jj) 
+                endif
+              else
+                datapd(i,j,cfld) = spval
+              endif
               enddo
             enddo
          endif
@@ -1513,7 +1527,7 @@
            (IGET(138)>0).OR.(IGET(414)>0).OR.     &
            (IGET(546)>0).OR.(IGET(547)>0).OR.     &
            (IGET(548)>0).OR.(IGET(739)>0).OR.     &
-           (IGET(771)>0)) THEN
+           (IGET(744)>0).OR.(IGET(771)>0)) THEN
 
         if (.not. allocated(psfc))  allocate(psfc(ista:iend,jsta:jend))
 !
@@ -2136,7 +2150,7 @@
            DO J=JSTA,JEND
              DO I=ISTA,IEND
              if(T(I,J,LM)/=spval.and.PMID(I,J,LM)/=spval.and.SMOKE(I,J,LM,1)/=spval)&
-               GRID1(I,J) = (1./RD)*(PMID(I,J,LM)/T(I,J,LM))*SMOKE(I,J,LM,1)
+               GRID1(I,J) = (1./RD)*(PMID(I,J,LM)/T(I,J,LM))*SMOKE(I,J,LM,1)/(1E9)
              ENDDO
            ENDDO
            if(grib=='grib2') then
@@ -2145,6 +2159,41 @@
              datapd(1:iend-ista+1,1:jend-jsta+1,cfld) = GRID1(ista:iend,jsta:jend)
            endif
          ENDIF
+!
+! E. James - 14 Sep 2022: DUST from RRFS on lowest model level
+!
+         IF (IGET(744)>0) THEN
+           GRID1=SPVAL
+           DO J=JSTA,JEND
+             DO I=ISTA,IEND
+             if(T(I,J,LM)/=spval.and.PMID(I,J,LM)/=spval.and.FV3DUST(I,J,LM,1)/=spval)&
+               GRID1(I,J) = (1./RD)*(PMID(I,J,LM)/T(I,J,LM))*FV3DUST(I,J,LM,1)/(1E9)
+             ENDDO
+           ENDDO
+           if(grib=='grib2') then
+             cfld=cfld+1
+             fld_info(cfld)%ifld=IAVBLFLD(IGET(744))
+             datapd(1:iend-ista+1,1:jend-jsta+1,cfld) = GRID1(ista:iend,jsta:jend)
+           endif
+         ENDIF
+!
+! E. James - 23 Feb 2023: COARSEPM from RRFS on lowest model level
+!
+         IF (IGET(1014)>0) THEN
+           GRID1=SPVAL
+           DO J=JSTA,JEND
+             DO I=ISTA,IEND
+             if(T(I,J,LM)/=spval.and.PMID(I,J,LM)/=spval.and.COARSEPM(I,J,LM,1)/=spval)&
+               GRID1(I,J) = (1./RD)*(PMID(I,J,LM)/T(I,J,LM))*COARSEPM(I,J,LM,1)/(1E9)
+             ENDDO
+           ENDDO
+           if(grib=='grib2') then
+             cfld=cfld+1
+             fld_info(cfld)%ifld=IAVBLFLD(IGET(1014))
+             datapd(1:iend-ista+1,1:jend-jsta+1,cfld) = GRID1(ista:iend,jsta:jend)
+           endif
+         ENDIF
+!
 !
 !     BLOCK 3.  ANEMOMETER LEVEL (10M) WINDS, THETA, AND Q.
 !
@@ -3340,7 +3389,7 @@
           cfld=cfld+1
            fld_info(cfld)%ifld=IAVBLFLD(IGET(035))
            fld_info(cfld)%ntrange=1
-          fld_info(cfld)%tinvstat=IFHR-ID(18)
+          fld_info(cfld)%tinvstat=IFHR
 !$omp parallel do private(i,j,ii,jj)
           do j=1,jend-jsta+1
             jj = jsta+j-1
@@ -3386,6 +3435,7 @@
             fld_info(cfld)%ifld=IAVBLFLD(IGET(746))
             fld_info(cfld)%ntrange=1
             fld_info(cfld)%tinvstat=IFHR-ID(18)
+            if(MODELNAME=='FV3R' .OR. MODELNAME=='GFS')fld_info(cfld)%tinvstat=IFHR
 !$omp parallel do private(i,j,ii,jj)
             do j=1,jend-jsta+1
               jj = jsta+j-1
@@ -3431,6 +3481,7 @@
             fld_info(cfld)%ifld=IAVBLFLD(IGET(782))
             fld_info(cfld)%ntrange=1
             fld_info(cfld)%tinvstat=IFHR-ID(18)
+            if(MODELNAME=='FV3R' .OR. MODELNAME=='GFS')fld_info(cfld)%tinvstat=IFHR
 !$omp parallel do private(i,j,ii,jj)
             do j=1,jend-jsta+1
               jj = jsta+j-1
@@ -3441,6 +3492,54 @@
             enddo
            endif
          ENDIF
+
+!     ACCUMULATED SNOWFALL.
+         IF (IGET(1004)>0) THEN
+!$omp parallel do private(i,j)
+            DO J=JSTA,JEND
+              DO I=ISTA,IEND
+                GRID1(I,J) = SNOW_ACM(I,J)
+              ENDDO
+            ENDDO
+            ID(1:25) = 0
+            ITPREC     = NINT(TPREC)
+!mp
+        if (ITPREC /= 0) then
+         IFINCR     = MOD(IFHR,ITPREC)
+         IF(IFMIN >= 1)IFINCR= MOD(IFHR*60+IFMIN,ITPREC*60)
+        else
+         IFINCR     = 0
+        endif
+!mp
+            ID(18)     = 0
+            ID(19)     = IFHR
+            IF(IFMIN >= 1)ID(19)=IFHR*60+IFMIN
+            ID(20)     = 4
+            IF (IFINCR==0) THEN
+             ID(18) = IFHR-ITPREC
+            ELSE
+             ID(18) = IFHR-IFINCR
+             IF(IFMIN >= 1)ID(18)=IFHR*60+IFMIN-IFINCR
+            ENDIF
+            IF (ID(18)<0) ID(18) = 0
+           if(grib=='grib2') then
+            cfld=cfld+1
+            fld_info(cfld)%ifld=IAVBLFLD(IGET(1004))
+            fld_info(cfld)%ntrange=1
+            fld_info(cfld)%tinvstat=IFHR-ID(18)
+            if(MODELNAME=='FV3R' .or. MODELNAME=='GFS')fld_info(cfld)%tinvstat=IFHR
+!            print*,'id(18),tinvstat in acgraup= ',ID(18),fld_info(cfld)%tinvstat
+!$omp parallel do private(i,j,ii,jj)
+            do j=1,jend-jsta+1
+              jj = jsta+j-1
+              do i=1,iend-ista+1
+              ii = ista+i-1
+                datapd(i,j,cfld) = GRID1(ii,jj)
+              enddo
+            enddo
+           endif
+         ENDIF
+
 !     
 !     ACCUMULATED SNOW MELT.
       IF (IGET(121)>0) THEN
@@ -3692,17 +3791,22 @@
 
 !     PRECIPITATION BUCKETS - accumulated between output times
 !     'BUCKET TOTAL PRECIP '
-         IF (IGET(434)>0.) THEN
+         NEED_IFI = IGET(1007)>0 .or. IGET(1008)>0 .or. IGET(1009)>0 .or. IGET(1010)>0
+         IF (IGET(434)>0. .or. NEED_IFI) THEN
 !$omp parallel do private(i,j)
            DO J=JSTA,JEND
              DO I=ISTA,IEND
                IF (IFHR == 0) THEN
-                 GRID1(I,J) = 0.0
+                 IFI_APCP(I,J) = 0.0
                ELSE
-                 GRID1(I,J) = PCP_BUCKET(I,J)
+                 IFI_APCP(I,J) = PCP_BUCKET(I,J)
                ENDIF 
              ENDDO
            ENDDO
+           ! Note: IFI.F may replace IFI_APCP with other values where it is spval or 0
+         ENDIF
+
+         IF (IGET(434)>0.) THEN
            ID(1:25) = 0
            ITPREC     = NINT(TPREC)
 !mp
@@ -3725,7 +3829,7 @@
              IF(IFMIN >= 1)ID(18)=IFHR*60+IFMIN-IFINCR
            ENDIF
            IF (ID(18)<0) ID(18) = 0
-           if(grib=='grib2') then
+           if(grib=='grib2' .and. IGET(434)>0) then
              cfld=cfld+1
              fld_info(cfld)%ifld=IAVBLFLD(IGET(434))
              if(ITPREC>0) then
@@ -3747,7 +3851,7 @@
                jj = jsta+j-1
                do i=1,iend-ista+1
                ii = ista+i-1
-                 datapd(i,j,cfld) = GRID1(ii,jj)
+                 datapd(i,j,cfld) = IFI_APCP(ii,jj)
                enddo
              enddo
            endif
@@ -3992,6 +4096,10 @@
                 endif
                 fld_info(cfld)%ntrange=1
               end if
+              if(MODELNAME == 'GFS' .OR. MODELNAME == 'FV3R') then
+                fld_info(cfld)%ntrange=1
+                fld_info(cfld)%tinvstat=IFHR-ID(18)
+              endif
 !$omp parallel do private(i,j,ii,jj)
               do j=1,jend-jsta+1
                 jj = jsta+j-1
@@ -4002,6 +4110,113 @@
               enddo
             endif
          ENDIF
+
+!     'BUCKET FREEZING RAIN '
+         IF (IGET(1003)>0.) THEN
+!$omp parallel do private(i,j)
+            DO J=JSTA,JEND
+              DO I=ISTA,IEND
+                GRID1(I,J) = FRZRN_BUCKET(I,J)
+              ENDDO
+            ENDDO
+            ID(1:25) = 0
+            ITPREC     = NINT(TPREC)
+!mp
+            if (ITPREC /= 0) then
+             IFINCR     = MOD(IFHR,ITPREC)
+             IF(IFMIN >= 1)IFINCR= MOD(IFHR*60+IFMIN,ITPREC*60)
+            else
+             IFINCR     = 0
+            endif
+!mp
+            ID(18)     = 0
+            ID(19)     = IFHR
+            IF(IFMIN >= 1)ID(19)=IFHR*60+IFMIN
+            ID(20)     = 4
+            IF (IFINCR==0) THEN
+             ID(18) = IFHR-ITPREC
+            ELSE
+             ID(18) = IFHR-IFINCR
+             IF(IFMIN >= 1)ID(18)=IFHR*60+IFMIN-IFINCR
+            ENDIF
+            IF (ID(18)<0) ID(18) = 0
+!      print*,'maxval BUCKET FREEZING RAIN: ', maxval(GRID1)
+            if(grib=='grib2') then
+              cfld=cfld+1
+              fld_info(cfld)%ifld=IAVBLFLD(IGET(1003))
+              fld_info(cfld)%ntrange=1
+              fld_info(cfld)%tinvstat=IFHR-ID(18)
+!              if(ITPREC>0) then
+!                fld_info(cfld)%ntrange=(IFHR-ID(18))/ITPREC
+!              else
+!                fld_info(cfld)%ntrange=0
+!              endif
+!              fld_info(cfld)%tinvstat=ITPREC
+!              if(fld_info(cfld)%ntrange==0) then
+!                if (ifhr==0) then
+!                  fld_info(cfld)%tinvstat=0
+!                else
+!                  fld_info(cfld)%tinvstat=1
+!                endif
+!                fld_info(cfld)%ntrange=1
+!              end if
+!$omp parallel do private(i,j,ii,jj)
+              do j=1,jend-jsta+1
+                jj = jsta+j-1
+                do i=1,iend-ista+1
+                ii = ista+i-1
+                  datapd(i,j,cfld) = GRID1(ii,jj)
+                enddo
+              enddo
+            endif
+         ENDIF
+
+!     'BUCKET SNOWFALL '
+         IF (IGET(1005)>0.) THEN
+!$omp parallel do private(i,j)
+            DO J=JSTA,JEND
+              DO I=ISTA,IEND
+                GRID1(I,J) = SNOW_BKT(I,J)
+              ENDDO
+            ENDDO
+            ID(1:25) = 0
+            ITPREC     = NINT(TPREC)
+!mp
+            if (ITPREC /= 0) then
+             IFINCR     = MOD(IFHR,ITPREC)
+             IF(IFMIN >= 1)IFINCR= MOD(IFHR*60+IFMIN,ITPREC*60)
+            else
+             IFINCR     = 0
+            endif
+!mp
+            ID(18)     = 0
+            ID(19)     = IFHR
+            IF(IFMIN >= 1)ID(19)=IFHR*60+IFMIN
+            ID(20)     = 4
+            IF (IFINCR==0) THEN
+             ID(18) = IFHR-ITPREC
+            ELSE
+             ID(18) = IFHR-IFINCR
+             IF(IFMIN >= 1)ID(18)=IFHR*60+IFMIN-IFINCR
+            ENDIF
+            IF (ID(18)<0) ID(18) = 0
+!      print*,'maxval BUCKET FREEZING RAIN: ', maxval(GRID1)
+            if(grib=='grib2') then
+              cfld=cfld+1
+              fld_info(cfld)%ifld=IAVBLFLD(IGET(1005))
+              fld_info(cfld)%ntrange=1
+              fld_info(cfld)%tinvstat=IFHR-ID(18)
+!$omp parallel do private(i,j,ii,jj)
+              do j=1,jend-jsta+1
+                jj = jsta+j-1
+                do i=1,iend-ista+1
+                ii = ista+i-1
+                  datapd(i,j,cfld) = GRID1(ii,jj)
+                enddo
+              enddo
+            endif
+         ENDIF
+
 
 !     ERIC JAMES: 10 JUN 2021 -- adding precip comparison to FFG
 !     thresholds. 913 is for 1h QPF, 914 for run total QPF.
@@ -6490,7 +6705,7 @@
       character(len=256), intent(in) :: compfile
       integer, intent(in) :: igetfld,fcst
       integer :: trange,invstat
-      real, dimension(IM,JM) :: outgrid
+      real, dimension(ista:iend,jsta:jend) :: outgrid
 
       real, allocatable, dimension(:,:) :: mscValue
 
@@ -6502,6 +6717,8 @@
       logical :: file_exists
 
       integer :: i, j, k, ii, jj
+
+      outgrid = 0
 
 !     Read in reference grid.
       INQUIRE(FILE=compfile, EXIST=file_exists)
@@ -6553,13 +6770,9 @@
                   outgrid(I,J) = 1.0
                ELSE IF (fcst .GT. 1 .AND. AVGPREC_CONT(I,J)*FLOAT(IFHR)*3600.*1000./DTQ2 .GT. mscValue(I,J)) THEN
                   outgrid(I,J) = 1.0
-               ELSE
-                  outgrid(I,J) = 0.0
                ENDIF
             ENDDO
          ENDDO
-       ELSE
-         outgrid = 0.0*AVGPREC
        ENDIF
       ENDIF
 !      write(*,*) 'FFG MAX, MIN:', &

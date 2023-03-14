@@ -46,6 +46,11 @@
 !!   21-07-07  J MENG - 2D DECOMPOSITION
 !!   22-09-22  L Zhang - ADD NO3 and NH4 output for UFS-Aerosols model
 !!   22-10-20  W Meng - Bug fix for cloud fraction and vertically integrated liquid
+!!   22-11-08  W Meng - Output hourly averaged PM2.5 and O3 for AQM model only (aqf_on) 
+!!   22-11-16  E James - Adding dust from RRFS
+!!   23-02-10  E James - Adding an extra IGET value to if statement for NGMSLP calculation
+!!   23-02-23  E James - Adding coarse PM from RRFS
+!!   23-03-03  S Trahan - Avoid out-of-bounds access in U2H & V2H by using USTORE & VSTORE with halo bounds
 !!
 !! USAGE:    CALL MDLFLD
 !!   INPUT ARGUMENT LIST:
@@ -83,12 +88,13 @@
       SUBROUTINE MDLFLD
 
 !    
-      use vrbls4d, only: dust, salt, suso, waso, soot, no3, nh4, smoke
+      use vrbls4d, only: dust, salt, suso, waso, soot, no3, nh4, smoke, fv3dust,&
+              coarsepm
       use vrbls3d, only: zmid, t, pmid, q, cwm, f_ice, f_rain, f_rimef, qqw, qqi,&
               qqr, qqs, cfr, cfr_raw, dbz, dbzr, dbzi, dbzc, qqw, nlice, nrain, qqg, zint, qqni,&
               qqnr, qqnw, qqnwfa, qqnifa, uh, vh, mcvg, omga, wh, q2, ttnd, rswtt, &
               rlwtt, train, tcucn, o3, rhomid, dpres, el_pbl, pint, icing_gfip, icing_gfis, &
-              catedr,mwt,gtg, REF_10CM, pmtf, ozcon
+              catedr,mwt,gtg, REF_10CM, avgpmtf, avgozcon
 
       use vrbls2d, only: slp, hbot, htop, cnvcfr, cprate, cnvcfr, sfcshx,sfclhx,ustar,z0,&
               sr, prec, vis, czen, pblh, pblhgust, u10, v10, avgprec, avgcprate, &
@@ -101,7 +107,7 @@
       use ctlblk_mod, only: jsta_2l, jend_2u, lm, jsta, jend, grib, cfld, datapd,&
               fld_info, modelname, imp_physics, dtq2, spval, icount_calmict,&
               me, dt, avrain, theat, ifhr, ifmin, avcnvc, lp1, im, jm, &
-      ista, iend, ista_2l, iend_2u, aqfcmaq_on, gocart_on, gccpp_on, nasa_on 
+      ista, iend, ista_2l, iend_2u, aqf_on, gocart_on, gccpp_on, nasa_on
       use rqstfld_mod, only: iget, id, lvls, iavblfld, lvlsxml
       use gridspec_mod, only: gridtype,maptype,dxval
       use upp_physics, only: CALRH, CALCAPE, CALVOR
@@ -141,7 +147,8 @@
                                              DBZI1,  DBZC1, EGRID6, EGRID7, NLICE1, &
                                              QI,     QINT,  TT,     PPP,    QV,     &
                                              QCD,    QICE1, QRAIN1, QSNO1,  refl,   &
-                                             QG1,    refl1km, refl4km, RH, GUST, NRAIN1,Zm10c
+                                             QG1,    refl1km, refl4km, RH, GUST, NRAIN1,Zm10c, &
+                                             USTORE, VSTORE
 !                                            T700,   TH700   
 !
       REAL, ALLOCATABLE :: EL(:,:,:),RICHNO(:,:,:) ,PBLRI(:,:),  PBLREGIME(:,:)
@@ -185,6 +192,15 @@
 !
 !     ALLOCATE LOCAL ARRAYS
 !
+! Initialize halo regions of USTORE & VSTORE for cases when the halo extends
+! beyond the computational domain boundary.
+!$OMP PARALLEL DO COLLAPSE(2)
+      DO J=jsta_2l,jend_2u
+        DO I=ista_2l,iend_2u
+          USTORE(I,J) = 0
+          VSTORE(I,J) = 0
+        ENDDO
+      ENDDO
 ! Set up logical flag to indicate whether model outputs radar directly
       Model_Radar = .false.
 !      IF (ABS(MAXVAL(REF_10CM)-SPVAL)>SMALL)Model_Radar=.True.
@@ -205,7 +221,7 @@
       ALLOCATE(PBLRI  (ista_2l:iend_2u,JSTA_2L:JEND_2U))    
 !     
 !     SECOND, STANDARD NGM SEA LEVEL PRESSURE.
-      IF (IGET(105) > 0 .OR. IGET(445) > 0) THEN
+      IF (IGET(023) > 0 .OR. IGET(105) > 0 .OR. IGET(445) > 0) THEN
         CALL NGMSLP   ! this value is used in some later calculation.
       ENDIF
       IF (IGET(105) > 0) THEN
@@ -916,6 +932,7 @@ refl_adj:           IF(REF_10CM(I,J,L)<=DBZmin) THEN
            (IGET(629)>0).OR.(IGET(630)>0).OR.      &
            (IGET(470)>0).OR.                       &
            (IGET(909)>0).OR.(IGET(737)>0).OR.      &
+           (IGET(742)>0).OR.                       &
            (IGET(994)>0).OR.(IGET(995)>0) ) THEN
 
       DO 190 L=1,LM
@@ -2235,7 +2252,7 @@ refl_adj:           IF(REF_10CM(I,J,L)<=DBZmin) THEN
 ! AQF
 !===============
 
-        if (aqfcmaq_on) then
+        if (aqf_on) then
 
            IF (IGET(994)>0) THEN
              IF (LVLS(L,IGET(994))>0) THEN
@@ -2243,14 +2260,32 @@ refl_adj:           IF(REF_10CM(I,J,L)<=DBZmin) THEN
 !$omp parallel do private(i,j)
                DO J=JSTA,JEND
                  DO I=ISTA,IEND
-                   GRID1(I,J) = OZCON(I,J,LL)*1000.    ! convert ppm to ppb
+                   IF(AVGOZCON(I,J,LL)<SPVAL) THEN
+                   GRID1(I,J) = AVGOZCON(I,J,LL)    ! in ppb
+                   ELSE
+                   GRID1(I,J) = SPVAL
+                   ENDIF
                  ENDDO
                ENDDO
-
+               ID(1:25) = 0
+               ITHEAT     = INT(THEAT)
+               ID(19) = IFHR
+               ID(20) = 3
+               IF (IFHR==0) THEN
+                  ID(18) = 0
+               ELSE
+                  ID(18) = IFHR-1
+               ENDIF
                if(grib=="grib2") then
                  cfld=cfld+1
                  fld_info(cfld)%ifld=IAVBLFLD(IGET(994))
                  fld_info(cfld)%lvl=LVLSXML(L,IGET(994))
+                 if(IFHR==0) then
+                   fld_info(cfld)%ntrange=0
+                 else
+                   fld_info(cfld)%ntrange=1
+                 endif
+                 fld_info(cfld)%tinvstat=IFHR-ID(18)
 !$omp parallel do private(i,j,ii,jj)
                  do j=1,jend-jsta+1
                    jj = jsta+j-1
@@ -2272,15 +2307,28 @@ refl_adj:           IF(REF_10CM(I,J,L)<=DBZmin) THEN
 !$omp parallel do private(i,j)
                DO J=JSTA,JEND
                  DO I=ISTA,IEND
-                   DENS=PMID(I,J,LL)/(RD*T(I,J,LL)*(Q(I,J,LL)*D608+1.0))      ! DENSITY
-                   GRID1(I,J) = PMTF(I,J,LL)*DENS      ! ug/kg-->ug/m3
+                   GRID1(I,J) = AVGPMTF(I,J,LL)      !ug/m3
                  ENDDO
                ENDDO
-
+               ID(1:25) = 0
+               ITHEAT     = INT(THEAT)
+               ID(19) = IFHR
+               ID(20) = 3
+               IF (IFHR==0) THEN
+                  ID(18) = 0
+               ELSE
+                  ID(18) = IFHR-1
+               ENDIF
                if(grib=="grib2") then
                  cfld=cfld+1
                  fld_info(cfld)%ifld=IAVBLFLD(IGET(995))
                  fld_info(cfld)%lvl=LVLSXML(L,IGET(995))
+                 if(IFHR==0) then
+                   fld_info(cfld)%ntrange=0
+                 else
+                   fld_info(cfld)%ntrange=1
+                 endif
+                 fld_info(cfld)%tinvstat=IFHR-ID(18)
 !$omp parallel do private(i,j,ii,jj)
                  do j=1,jend-jsta+1
                    jj = jsta+j-1
@@ -2307,7 +2355,7 @@ refl_adj:           IF(REF_10CM(I,J,L)<=DBZmin) THEN
                DO J=JSTA,JEND
                DO I=ista,iend
                IF(PMID(I,J,LL)<spval.and.T(I,J,LL)<spval.and.SMOKE(I,J,LL,1)<spval)THEN
-                 GRID1(I,J) = (1./RD)*(PMID(I,J,LL)/T(I,J,LL))*SMOKE(I,J,LL,1)
+                 GRID1(I,J) = (1./RD)*(PMID(I,J,LL)/T(I,J,LL))*SMOKE(I,J,LL,1)/(1E9)
                ELSE
                  GRID1(I,J) = spval
                ENDIF
@@ -2317,6 +2365,66 @@ refl_adj:           IF(REF_10CM(I,J,L)<=DBZmin) THEN
                  cfld=cfld+1
                  fld_info(cfld)%ifld=IAVBLFLD(IGET(737))
                  fld_info(cfld)%lvl=LVLSXML(L,IGET(737))
+!$omp parallel do private(i,j,ii,jj)
+                 do j=1,jend-jsta+1
+                   jj = jsta+j-1
+                   do i=1,iend-ista+1
+                     ii = ista+i-1
+                     datapd(i,j,cfld) = GRID1(ii,jj)
+                   enddo
+                 enddo
+               endif
+             END IF
+           ENDIF
+! E. James - 14 Sep 2022: Dust from RRFS
+!          DUST
+           IF (IGET(742)>0) THEN
+             IF (LVLS(L,IGET(742))>0) THEN
+               LL=LM-L+1
+!$omp parallel do private(i,j)
+               DO J=JSTA,JEND
+               DO I=ista,iend
+               IF(PMID(I,J,LL)<spval.and.T(I,J,LL)<spval.and.FV3DUST(I,J,LL,1)<spval)THEN
+                 GRID1(I,J) = (1./RD)*(PMID(I,J,LL)/T(I,J,LL))*FV3DUST(I,J,LL,1)/(1E9)
+               ELSE
+                 GRID1(I,J) = spval
+               ENDIF
+               ENDDO
+               ENDDO
+               if(grib=="grib2") then
+                 cfld=cfld+1
+                 fld_info(cfld)%ifld=IAVBLFLD(IGET(742))
+                 fld_info(cfld)%lvl=LVLSXML(L,IGET(742))
+!$omp parallel do private(i,j,ii,jj)
+                 do j=1,jend-jsta+1
+                   jj = jsta+j-1
+                   do i=1,iend-ista+1
+                     ii = ista+i-1
+                     datapd(i,j,cfld) = GRID1(ii,jj)
+                   enddo
+                 enddo
+               endif
+             END IF
+           ENDIF
+! E. James - 23 Feb 2023: COARSEPM from RRFS
+!          DUST
+           IF (IGET(1012)>0) THEN
+             IF (LVLS(L,IGET(1012))>0) THEN
+               LL=LM-L+1
+!$omp parallel do private(i,j)
+               DO J=JSTA,JEND
+               DO I=ista,iend
+               IF(PMID(I,J,LL)<spval.and.T(I,J,LL)<spval.and.COARSEPM(I,J,LL,1)<spval)THEN
+                 GRID1(I,J) = (1./RD)*(PMID(I,J,LL)/T(I,J,LL))*COARSEPM(I,J,LL,1)/(1E9)
+               ELSE
+                 GRID1(I,J) = spval
+               ENDIF
+               ENDDO
+               ENDDO
+               if(grib=="grib2") then
+                 cfld=cfld+1
+                 fld_info(cfld)%ifld=IAVBLFLD(IGET(1012))
+                 fld_info(cfld)%lvl=LVLSXML(L,IGET(1012))
 !$omp parallel do private(i,j,ii,jj)
                  do j=1,jend-jsta+1
                    jj = jsta+j-1
@@ -3796,6 +3904,7 @@ refl_adj:           IF(REF_10CM(I,J,L)<=DBZmin) THEN
                     ELSE
                       GRID1(I,J) = U10(I,J) ! IF NO MIX LAYER, SPECIFY 10 M WIND, PER DIMEGO,
                     END IF
+                    USTORE(I,J) = GRID1(I,J)
                   END DO
                 END DO 
 ! compute v component now
@@ -3841,12 +3950,13 @@ refl_adj:           IF(REF_10CM(I,J,L)<=DBZmin) THEN
                     ELSE
                       GRID2(I,J) = V10(I,J) ! IF NO MIX LAYER, SPECIFY 10 M WIND, PER DIMEGO,
                     END IF
+                    VSTORE(I,J) = GRID2(I,J)
                   END DO
                 END DO 
 
 
-                CALL U2H(GRID1(ISTA_2L:IEND_2U,JSTA_2L:JEND_2U),EGRID1)
-                CALL V2H(GRID2(ISTA_2L:IEND_2U,JSTA_2L:JEND_2U),EGRID2)
+                CALL U2H(USTORE,EGRID1)
+                CALL V2H(VSTORE,EGRID2)
 !$omp parallel do private(i,j)
                 DO J=JSTA,JEND
                   DO I=ista,iend

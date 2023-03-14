@@ -66,6 +66,12 @@
 !> 2022-09-22 | Li(Kate Zhang)    | Remove duplicated GOCART output variables and add capbility for NASA GOCART (UFS-Aerosols).
 !> 2022-09-22 | Li(Kate Zhang)    | Update look-up table for NASA GOCART (UFS-Aerosols).
 !> 2022-10-20 | Li(Kate Zhang)    | Add nitrate look-up table and nitrate AOD for NASA GOCART (UFS-Aerosols).
+!> 2022-11-16 | Eric James        | Adding total column dust, biomass burning emissions, hourly wildfire potential from RRFS
+!> 2022-1207  | Wen Meng          | Add AOD for AQM 
+!> 2022-12-15 | Eric James        | Modifying GSL exp2 ceiling diagnostic from HRRR, to correct a low bias in cloud cover
+!> 2023-02-02 | Wen Meng          | Remove GSL specified clear-sky upward/downward SW
+!> 2023-02-10 | Eric James        | Removing neighbourhood check from GSL exp2 ceiling diagnostic
+!> 2023-02-23 | Eric James        | Adding coarse PM from RRFS, and using AOD from FV3 for RRFS
 !>
 !> @author Russ Treadon W/NP2 @date 1993-08-30
       SUBROUTINE CLDRAD
@@ -89,11 +95,11 @@
                          AIRDIFFSWIN, DUSMASS, DUSMASS25, DUCMASS, DUCMASS25, &
                          ALWINC, ALWTOAC, SWDDNI, SWDDIF, SWDNBC, SWDDNIC,    &
                          SWDDIFC, SWUPBC, LWDNBC, LWUPBC, SWUPT,              &
-                         TAOD5502D, AERSSA2D, AERASY2D, MEAN_FRP, LWP, IWP,   &
-                         AVGCPRATE,                                           &
+                         TAOD5502D, AERSSA2D, AERASY2D, MEAN_FRP, EBB, HWP,   &
+                         AODTOT, LWP, IWP, AVGCPRATE,                         &
                          DUSTCB,SSCB,BCCB,OCCB,SULFCB,DUSTPM,SSPM,aod550,     &
                          du_aod550,ss_aod550,su_aod550,oc_aod550,bc_aod550,   &
-                         PWAT,DUSTPM10,MAOD,NO3CB,NH4CB
+                         PWAT,DUSTPM10,MAOD,NO3CB,NH4CB,aqm_aod550
       use masks,    only: LMH, HTM
       use params_mod, only: TFRZ, D00, H99999, QCLDMIN, SMALL, D608, H1, ROG, &
                             GI, RD, QCONV, ABSCOEFI, ABSCOEF, STBOL, PQ0, A2, &
@@ -102,7 +108,8 @@
                             FLD_INFO, AVRAIN, THEAT, IFHR, IFMIN, AVCNVC,     &
                             TCLOD, ARDSW, TRDSW, ARDLW, NBIN_DU, TRDLW, IM,   &
                             NBIN_SS, NBIN_OC,NBIN_BC,NBIN_SU,NBIN_NO3,DTQ2,   &
-                            JM, LM, gocart_on, gccpp_on, nasa_on, me, rdaod,ISTA, IEND
+                            JM, LM, gocart_on, gccpp_on, nasa_on, me, rdaod,  &
+                            ISTA, IEND,aqf_on
       use rqstfld_mod, only: IGET, ID, LVLS, IAVBLFLD
       use gridspec_mod, only: dyval, gridtype
       use cmassi_mod,  only: TRAD_ice
@@ -438,8 +445,17 @@
 !     TOTAL COLUMN AOD (TAOD553D FROM HRRR-SMOKE)
 !
       IF (IGET(735) > 0) THEN
+       IF (MODELNAME == 'RAPR') THEN
          CALL CALPW(GRID1(ista:iend,jsta:jend),19)
          CALL BOUND(GRID1,D00,H99999)
+       ELSE IF (MODELNAME == 'FV3R') THEN
+         GRID1=SPVAL
+         DO J=JSTA,JEND
+           DO I=ISTA,IEND
+             if (AODTOT(I,J) < SPVAL) GRID1(I,J) = AODTOT(I,J)
+           ENDDO
+         ENDDO
+       ENDIF
         if(grib == "grib2" )then
           cfld = cfld + 1
           fld_info(cfld)%ifld = IAVBLFLD(IGET(735))
@@ -463,6 +479,44 @@
         if(grib == "grib2" )then
           cfld = cfld + 1
           fld_info(cfld)%ifld = IAVBLFLD(IGET(736))
+!$omp parallel do private(i,j,ii,jj)
+          do j=1,jend-jsta+1
+            jj = jsta+j-1
+            do i=1,iend-ista+1
+              ii=ista+i-1
+              datapd(i,j,cfld) = GRID1(ii,jj)
+            enddo
+          enddo
+        endif
+      ENDIF
+!
+!     TOTAL COLUMN DUST
+!
+      IF (IGET(741) > 0) THEN
+         CALL CALPW(GRID1(ista:iend,jsta:iend),22)
+         CALL BOUND(GRID1,D00,H99999)
+        if(grib == "grib2" )then
+          cfld = cfld + 1
+          fld_info(cfld)%ifld = IAVBLFLD(IGET(741))
+!$omp parallel do private(i,j,ii,jj)
+          do j=1,jend-jsta+1
+            jj = jsta+j-1
+            do i=1,iend-ista+1
+              ii=ista+i-1
+              datapd(i,j,cfld) = GRID1(ii,jj)
+            enddo
+          enddo
+        endif
+      ENDIF
+!
+!     TOTAL COLUMN COARSEPM
+!
+      IF (IGET(1011) > 0) THEN
+         CALL CALPW(GRID1(ista:iend,jsta:iend),23)
+         CALL BOUND(GRID1,D00,H99999)
+        if(grib == "grib2" )then
+          cfld = cfld + 1
+          fld_info(cfld)%ifld = IAVBLFLD(IGET(1011))
 !$omp parallel do private(i,j,ii,jj)
           do j=1,jend-jsta+1
             jj = jsta+j-1
@@ -2076,11 +2130,18 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
 !    However, for RAPv5/HRRRv4, paramater 711 will be supplied as
 !    the GSD cloud-base height, and parameter 798 will be the
 !    corresponding cloud-base pressure. (J. Kenyon, 4 Nov 2019)
+! -- E. James, 15 Dec 2022
+!    The above experimental diagnostic, developed for the HRRR with
+!    lots of "add-ons" to correct for the HRRR's low bias in cloud
+!    cover, needs to be revised for the RRFS with its more extensive
+!    cloudiness.  For an FAA deliverable due Feb 2023, the diagnostic
+!    is being modified to get rid of some of the add ons.
 
 !    Parameters 711/798: experimental ceiling diagnostic #2 (height and pressure, respectively)
         IF ((IGET(711)>0) .OR. (IGET(798)>0)) THEN
           ! set minimum cloud fraction to represent a ceiling
-          ceiling_thresh_cldfra = 0.4
+!          ceiling_thresh_cldfra = 0.4
+          ceiling_thresh_cldfra = 0.5
           ! set some constants for ceiling adjustment in snow (retained from legacy algorithm, also in calvis.f)
           rhoice = 970.
           coeffp = 10.36
@@ -2170,23 +2231,24 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
                 end do
                 !-- end of search 2
 
-                zceil = min(zceil1,zceil2) ! choose lower of zceil1 and zceil2
+!                zceil = min(zceil1,zceil2) ! choose lower of zceil1 and zceil2
+                zceil = zceil1
 
                 !-- Search for "indefinite ceiling" (vertical visibility) conditions:  consider
                 ! lowering of apparent ceiling due to falling snow (retained from legacy
                 ! diagnostic); this is extracted from calvis.f (visibility diagnostic)
-                if (QQS(i,j,LM)>1.e-10) then
-                  TV=T(I,J,lm)*(H1+D608*Q(I,J,lm))
-                  RHOAIR=PMID(I,J,lm)/(RD*TV)
-                  vovermd = (1.+Q(i,j,LM))/rhoair + QQS(i,j,LM)/rhoice
-                  concfp = QQS(i,j,LM)/vovermd*1000.
-                  betav = coeffp*concfp**exponfp + 1.e-10
-                  vertvis = 1000.*min(90., const1/betav)
-                  if (vertvis < zceil-FIS(I,J)*GI ) then ! if vertvis is more restictive than zceil found above; set zceil to vertvis
-                    ! note that FIS is geopotential of the surface (ground), and GI is 1/g
-                    zceil = FIS(I,J)*GI + vertvis
-                  end if
-                end if
+!                if (QQS(i,j,LM)>1.e-10) then
+!                  TV=T(I,J,lm)*(H1+D608*Q(I,J,lm))
+!                  RHOAIR=PMID(I,J,lm)/(RD*TV)
+!                  vovermd = (1.+Q(i,j,LM))/rhoair + QQS(i,j,LM)/rhoice
+!                  concfp = QQS(i,j,LM)/vovermd*1000.
+!                  betav = coeffp*concfp**exponfp + 1.e-10
+!                  vertvis = 1000.*min(90., const1/betav)
+!                  if (vertvis < zceil-FIS(I,J)*GI ) then ! if vertvis is more restictive than zceil found above; set zceil to vertvis
+!                    ! note that FIS is geopotential of the surface (ground), and GI is 1/g
+!                    zceil = FIS(I,J)*GI + vertvis
+!                  end if
+!                end if
 
                 ceil(I,J) = zceil
             ENDDO      ! i loop
@@ -2227,7 +2289,7 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
               do jc = max(1,J-numr),min(JM,J+numr)
               do ic = max(1,I-numr),min(IM,I+numr)
                 ceil_neighbor = max( full_ceil(ic,jc)-full_fis(ic,jc)*GI , 5.0) !  ceil_neighbor in AGL
-                ceil_min = min( ceil_min, ceil_neighbor )
+!                ceil_min = min( ceil_min, ceil_neighbor )
               enddo
               enddo
               CLDZ(I,J) = ceil_min + FIS(I,J)*GI ! convert back to ASL and store
@@ -3801,20 +3863,6 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
          endif
       ENDIF
 
-! Instantaneous clear-sky upwelling SW at the surface
-      IF (IGET(743)>0) THEN
-        DO J=JSTA,JEND
-          DO I=ISTA,IEND
-            GRID1(I,J) = SWUPBC(I,J)
-          ENDDO
-        ENDDO
-        if(grib=='grib2') then
-          cfld=cfld+1
-          fld_info(cfld)%ifld=IAVBLFLD(IGET(743))
-          datapd(1:iend-ista+1,1:jend-jsta+1,cfld)=GRID1(ista:iend,jsta:jend)
-        endif
-      ENDIF
-
 !     CURRENT OUTGOING LW RADIATION AT THE SURFACE.
       IF (IGET(142)>0) THEN
 !$omp parallel do private(i,j)
@@ -3831,7 +3879,7 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
       ENDIF
 
 ! Instantaneous clear-sky downwelling LW at the surface
-      IF (IGET(744)>0) THEN
+      IF (IGET(764)>0) THEN
         DO J=JSTA,JEND
           DO I=ISTA,IEND
             GRID1(I,J) = LWDNBC(I,J)
@@ -3839,16 +3887,48 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
         ENDDO
         if(grib=='grib2') then
           cfld=cfld+1
-          fld_info(cfld)%ifld=IAVBLFLD(IGET(744))
+          fld_info(cfld)%ifld=IAVBLFLD(IGET(764))
           datapd(1:iend-ista+1,1:jend-jsta+1,cfld)=GRID1(ista:iend,jsta:jend)
         endif
       ENDIF
 
 ! Instantaneous clear-sky upwelling LW at the surface
-      IF (IGET(745)>0) THEN
+      IF (IGET(765)>0) THEN
         DO J=JSTA,JEND
           DO I=ISTA,IEND
             GRID1(I,J) = LWUPBC(I,J)
+          ENDDO
+        ENDDO
+        if(grib=='grib2') then
+          cfld=cfld+1
+          fld_info(cfld)%ifld=IAVBLFLD(IGET(765))
+          datapd(1:iend-ista+1,1:jend-jsta+1,cfld)=GRID1(ista:iend,jsta:jend)
+        endif
+      ENDIF
+
+! Instantaneous MEAN_FRP
+      IF (IGET(740)>0) THEN
+        DO J=JSTA,JEND
+          DO I=ISTA,IEND
+            GRID1(I,J) = MEAN_FRP(I,J)
+          ENDDO
+        ENDDO
+        if(grib=='grib2') then
+          cfld=cfld+1
+          fld_info(cfld)%ifld=IAVBLFLD(IGET(740))
+          datapd(1:iend-ista+1,1:jend-jsta+1,cfld)=GRID1(ista:iend,jsta:jend)
+        endif
+      ENDIF
+
+! Biomass burning emissions (EBB)
+      IF (IGET(745)>0) THEN
+        DO J=JSTA,JEND
+          DO I=ISTA,IEND
+            IF (EBB(I,J)<spval) THEN
+              GRID1(I,J) = EBB(I,J)/(1E9)
+            ELSE
+              GRID1(I,J) = spval
+            ENDIF
           ENDDO
         ENDDO
         if(grib=='grib2') then
@@ -3858,18 +3938,20 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
         endif
       ENDIF
 
-! Instantaneous MEAN_FRP
-      IF (IGET(740)>0) THEN
-!        print *,"GETTING INTO MEAN_FRP PART"
+! Hourly wildfire potential (HWP)
+      IF (IGET(755)>0) THEN
         DO J=JSTA,JEND
           DO I=ISTA,IEND
-            GRID1(I,J) = MEAN_FRP(I,J)
+            IF (HWP(I,J)<spval) THEN
+              GRID1(I,J) = HWP(I,J)
+            ELSE
+              GRID1(I,J) = spval
+            ENDIF
           ENDDO
         ENDDO
         if(grib=='grib2') then
-!          print *,"GETTING INTO MEAN_FRP GRIB2 PART"
           cfld=cfld+1
-          fld_info(cfld)%ifld=IAVBLFLD(IGET(740))
+          fld_info(cfld)%ifld=IAVBLFLD(IGET(755))
           datapd(1:iend-ista+1,1:jend-jsta+1,cfld)=GRID1(ista:iend,jsta:jend)
         endif
       ENDIF
@@ -3895,20 +3977,6 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
           fld_info(cfld)%ifld=IAVBLFLD(IGET(262))
           datapd(1:iend-ista+1,1:jend-jsta+1,cfld)=GRID1(ista:iend,jsta:jend)
          endif
-      ENDIF
-
-! Instantaneous clear-sky downwelling SW at surface (GSD version)
-      IF (IGET(742)>0) THEN
-        DO J=JSTA,JEND
-          DO I=ISTA,IEND
-            GRID1(I,J) = SWDNBC(I,J)
-          ENDDO
-        ENDDO
-        if(grib=='grib2') then
-          cfld=cfld+1
-          fld_info(cfld)%ifld=IAVBLFLD(IGET(742))
-          datapd(1:iend-ista+1,1:jend-jsta+1,cfld)=GRID1(ista:iend,jsta:jend)
-        endif
       ENDIF
 
 ! Instantaneous SWDDNI
@@ -4487,6 +4555,22 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
           endif
         ENDIF
       END IF !rdaod
+
+      !AQM AEROSOL OPTICAL DEPTH AT 550 NM
+      IF (aqf_on) THEN
+        IF (IGET(712).GT.0) THEN
+          DO J=JSTA,JEND
+            DO I=ISTA,IEND
+              grid1(i,j)=aqm_aod550(i,j)
+            ENDDO
+          ENDDO
+          if(grib=="grib2" )then
+            cfld=cfld+1
+            fld_info(cfld)%ifld=IAVBLFLD(IGET(712))
+            datapd(1:iend-ista+1,1:jend-jsta+1,cfld)=GRID1(ista:iend,jsta:jend)
+          endif
+        ENDIF
+      END IF !aqf_on
 
       !2D AEROSOL OPTICAL DEPTH AT 550 NM
       IF (IGET(715)>0) THEN
