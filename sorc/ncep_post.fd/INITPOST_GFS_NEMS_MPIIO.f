@@ -73,7 +73,7 @@
               ardsw, asrfc, avrain, avcnvc, theat, gdsdegr, spl, lsm, alsl, im, jm, im_jm, lm,  &
               jsta_2l, jend_2u, nsoil, lp1, icu_physics, ivegsrc, novegtype, nbin_ss, nbin_bc,  &
               nbin_oc, nbin_su, gocart_on, gccpp_on, pt_tbl, hyb_sigp, filenameFlux, fileNameAER, &
-              iSF_SURFACE_PHYSICS
+              iSF_SURFACE_PHYSICS, d2d_chem
       use gridspec_mod, only: maptype, gridtype, latstart, latlast, lonstart, lonlast, cenlon,  &
               dxval, dyval, truelat2, truelat1, psmapf, cenlat
       use nemsio_module_mpi
@@ -3608,6 +3608,7 @@
         enddo
       enddo
 
+      if ((gocart_on .or. gccpp_on) .and. d2d_chem ) then
 ! retrieve dust emission fluxes
       do K = 1, nbin_du
        if ( K == 1) VarName='duem001'
@@ -3892,55 +3893,11 @@
                            ,recname,reclevtyp,reclev,VarName,VcoordName&
                            ,maod(1,jsta_2l))
 
-
+       endif
 ! done with flux file, close it for now
       call nemsio_close(ffile,iret=status)
       deallocate(tmp,recname,reclevtyp,reclev)
       
-!lzhang
-!! retrieve sfc mass concentration
-!      VarName='DUSMASS'
-!      VcoordName='atmos col'
-!      l=1
-!      call assignnemsiovar(im,jsta,jend,jsta_2l,jend_2u                &
-!                          ,l,nrec,fldsize,spval,tmp                    &
-!                          ,recname,reclevtyp,reclev,VarName,VcoordName &
-!                          ,dusmass)
-!     if(debugprint)print*,'sample ',VarName,' = ',dusmass(isa,jsa)
-
-!lzhang
-!! retrieve col mass density
-!      VarName='DUCMASS'
-!      VcoordName='atmos col'
-!      l=1
-!      call assignnemsiovar(im,jsta,jend,jsta_2l,jend_2u                &
-!                          ,l,nrec,fldsize,spval,tmp                    &
-!                          ,recname,reclevtyp,reclev,VarName,VcoordName &
-!                          ,ducmass)
-!!     if(debugprint)print*,'sample ',VarName,' = ',ducmass(isa,jsa)
-
-!lzhang
-!! retrieve sfc mass concentration (pm2.5)
-!      VarName='DUSMASS25'
-!      VcoordName='atmos col'
-!      l=1
-!      call assignnemsiovar(im,jsta,jend,jsta_2l,jend_2u                &
-!                          ,l,nrec,fldsize,spval,tmp                    &
-!                          ,recname,reclevtyp,reclev,VarName,VcoordName &
-!                          ,dusmass25)
-!     if(debugprint)print*,'sample ',VarName,' = ',dusmass25(isa,jsa)
-
-!lzhang
-!! retrieve col mass density (pm2.5)
-!      VarName='DUCMASS25'
-!      VcoordName='atmos col'
-!      l=1
-!      call assignnemsiovar(im,jsta,jend,jsta_2l,jend_2u                &
-!                          ,l,nrec,fldsize,spval,tmp                    &
-!                          ,recname,reclevtyp,reclev,VarName,VcoordName &
-!                          ,ducmass25)
-!     if(debugprint)print*,'sample ',VarName,' = ',ducmass25(isa,jsa)
-
 ! pos east
        call collect_loc(gdlat,dummy)
        if(me == 0)then

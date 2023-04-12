@@ -492,6 +492,7 @@
         deallocate(asy)
         deallocate(ssa)
         deallocate(sca)
+       if (d2d_chem) then
         deallocate(duem)
         deallocate(dusd)
         deallocate(dudp)
@@ -516,6 +517,7 @@
         deallocate(ssdp)
         deallocate(sswt)
         deallocate(sssv)
+       endif
         deallocate(rhomid)
 ! vrbls2d
         deallocate(dusmass)

@@ -249,6 +249,11 @@
        <scale> 9.0</scale>
     </param>
 
+    <param>
+       <shortname>TOZNE_ON_ENTIRE_ATMOS_SINGLE_LYR</shortname>
+       <scale>4.0</scale>
+    </param>
+
     <!--  comments wherever I like -->
   </paramset>
 </postxml>

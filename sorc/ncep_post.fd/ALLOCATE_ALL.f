@@ -1185,6 +1185,7 @@
             enddo
           enddo
         enddo
+       if ( d2d_chem ) then
         allocate(duem(ista_2l:iend_2u,jsta_2l:jend_2u,nbin_du))
         allocate(dusd(ista_2l:iend_2u,jsta_2l:jend_2u,nbin_du))
         allocate(dudp(ista_2l:iend_2u,jsta_2l:jend_2u,nbin_du))
@@ -1269,6 +1270,7 @@
             enddo
           enddo
         enddo
+       endif
         allocate(rhomid(ista_2l:iend_2u,jsta_2l:jend_2u,lm))
 !Initialization
 !$omp parallel do private(i,j,l)

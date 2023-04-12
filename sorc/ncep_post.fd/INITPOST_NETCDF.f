@@ -84,7 +84,7 @@
               jsta_2l, jend_2u, nsoil, lp1, icu_physics, ivegsrc, novegtype, nbin_ss, nbin_bc,  &
               nbin_oc, nbin_su, nbin_no3, nbin_nh4, gocart_on,gccpp_on, nasa_on,pt_tbl,hyb_sigp,&
               filenameFlux, fileNameAER,                                               &
-              iSF_SURFACE_PHYSICS,rdaod, modelname, aqf_on,                         &
+              iSF_SURFACE_PHYSICS,rdaod, d2d_chem, modelname, aqf_on,                         &
               ista, iend, ista_2l, iend_2u,iend_m
       use gridspec_mod, only: maptype, gridtype, latstart, latlast, lonstart, lonlast, cenlon,  &
               dxval, dyval, truelat2, truelat1, psmapf, cenlat,lonstartv, lonlastv, cenlonv,    &
@@ -3372,7 +3372,7 @@
       print *, 'gocart_on=',gocart_on
       print *, 'gccpp_on=',gccpp_on
       print *, 'nasa_on=',nasa_on
-      if (gocart_on .or. gccpp_on) then
+      if ((gocart_on .or. gccpp_on) .and. d2d_chem) then
 
 
 ! retrieve dust emission fluxes

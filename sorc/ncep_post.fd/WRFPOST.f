@@ -119,7 +119,7 @@
               mdl2agl_tim, mdl2std_tim, mdl2thandpv_tim, calrad_wcloud_tim,nasa_on,gccpp_on,         &
               fixed_tim, time_output, imin, surfce2_tim, komax, ivegsrc, d3d_on, gocart_on,rdaod,    &
               readxml_tim, spval, fullmodelname, submodelname, hyb_sigp, filenameflat, aqf_on,numx,  &
-              run_ifi_tim
+              run_ifi_tim, d2d_chem
       use grib2_module,   only: gribit2,num_pset,nrecout,first_grbtbl,grib_info_finalize
       use upp_ifi_mod, only: write_ifi_debug_files
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -146,7 +146,7 @@
       integer      :: kpo,kth,kpv
       real,dimension(komax) :: po,th,pv
       namelist/nampgb/kpo,po,kth,th,kpv,pv,fileNameAER,d3d_on,gocart_on,gccpp_on, nasa_on,popascal &
-                     ,hyb_sigp,rdaod,aqf_on,vtimeunits,numx,write_ifi_debug_files
+                     ,hyb_sigp,rdaod,d2d_chem, aqf_on,vtimeunits,numx,write_ifi_debug_files
       integer      :: itag_ierr
       namelist/model_inputs/fileName,IOFORM,grib,DateStr,MODELNAME,SUBMODELNAME &
                      ,fileNameFlux,fileNameFlat
@@ -270,6 +270,7 @@
         popascal    = .false.
         fileNameAER = ''
         rdaod       = .false.
+        d2d_chem     = .false.
 
 !set control file name
         fileNameFlat='postxconfig-NT.txt'
