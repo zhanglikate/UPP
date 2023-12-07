@@ -109,7 +109,7 @@
                             TCLOD, ARDSW, TRDSW, ARDLW, NBIN_DU, TRDLW, IM,   &
                             NBIN_SS, NBIN_OC,NBIN_BC,NBIN_SU,NBIN_NO3,DTQ2,   &
                             JM, LM, gocart_on, gccpp_on, nasa_on, me, rdaod,  &
-                            ISTA, IEND,aqf_on
+                            ISTA, IEND,aqf_on,d2d_chem
       use rqstfld_mod, only: IGET, ID, LVLS, IAVBLFLD
       use gridspec_mod, only: dyval, gridtype
       use cmassi_mod,  only: TRAD_ice
@@ -5586,7 +5586,7 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
 
       endif  !nasa_on
 
-      if (gocart_on .or. gccpp_on ) then
+      if ((gocart_on .or. gccpp_on ) .and. d2d_chem) then
 !! ADD EMISSION FLUXES,dry depostion, wet/convective depostion (kg/m2/sec)
 !! The AER file uses 1.E6 to scale all 2d diagnosis fields
 !! Multiply by 1.E-6 to revert these fields back
