@@ -73,12 +73,12 @@ if [ $FH -eq -1 ] ; then
   export fhr3=anl
   export PGBS=YES
 elif [ $FH -eq 0 ] ; then
-  export paramlist=${paramlist:-$PARMpost/global_1x1_paramlist_g2.f000}
+  export paramlist=${paramlist:-$PARMpost/global_1x1_paramlist_g2.f000_chem}
   export paramlistb=${paramlistb:-$PARMpost/global_master-catchup_parmlist_g2}
   export fhr3=000
   export PGBS=YES
 else
-  export paramlist=${paramlist:-$PARMpost/global_1x1_paramlist_g2}
+  export paramlist=${paramlist:-$PARMpost/global_1x1_paramlist_g2_chem}
   export paramlistb=${paramlistb:-$PARMpost/global_master-catchup_parmlist_g2}
   export fhr3=`expr $FH + 0 `
   if [ $fhr3 -lt 100 ]; then export fhr3="0$fhr3"; fi
