@@ -333,6 +333,9 @@ rm -f fort.*
 #ln -sf $FLXINP     postgp.inp.flx$$
 #ln -sf $PGBOUT     postgp.out.pgb$$
 
+  export AeroFile=${$NWPROD}/fix/chem/optics_luts_*.dat #gocart_on, gccpp_on, nasa_on
+  cp ${AeroFile} .
+
 # change model generating Grib number 
 if [ ${GRIBVERSION} = grib2 ]; then
   cp ${POSTGRB2TBL} .

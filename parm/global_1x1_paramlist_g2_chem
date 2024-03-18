@@ -48,7 +48,6 @@ AOTK:entire atmosphere
 APCP:surface
 APTMP:2 m above ground
 ASYSFK:entire atmosphere
-var discipline=0 master_table=2 parmcat=0 parm=21:2 m above ground
 CAPE:180-0 mb above ground
 CAPE:255-0 mb above ground
 CAPE:90-0 mb above ground
@@ -90,12 +89,13 @@ CRAIN:surface
 CSNOW:surface
 CWAT:entire atmosphere (considered as a single layer)
 CWORK:entire atmosphere (considered as a single layer)
-DDMFLX:entire atmosphere
 DLWRF:surface
 DPT:2 m above ground
 DSWRF:surface
 FLDCP:surface
 FRICV:surface
+FROZR:surface
+FRZR:surface
 GFLUX:surface
 GRLE:50 mb
 GRLE:1000 mb
@@ -172,6 +172,7 @@ HGT:PV=2e-06 (Km^2/kg/s) surface
 HGT:surface
 HGT:tropopause
 HINDEX:surface
+HLCY:1000-0 m above ground
 HLCY:3000-0 m above ground
 HPBL:surface
 ICAHT:max wind
@@ -500,6 +501,7 @@ RWMR:1 hybrid level
 SCTAOTK:entire atmosphere
 SEDMFLX:entire atmosphere
 SHTFL:surface
+SDEN:surface
 SFCR:surface
 SOILW:0-0.1 m below ground
 SOILW:0.1-0.4 m below ground
