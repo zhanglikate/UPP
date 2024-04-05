@@ -40,6 +40,8 @@ ALL_TXT= \
   postxconfig-NT-UFS-aerosol-F00.txt \
   postxconfig-NT-GEFS-aerosol.txt \
   postxconfig-NT-GEFS-F00-aerosol.txt \
+  postxconfig-NT-CCPP-CHEM.txt \
+  postxconfig-NT-CCPP-CHEM-F00.txt \
   postxconfig-NT-AQM.txt \
   postxconfig-NT-SFS.txt
 
@@ -70,6 +72,8 @@ postxconfig-NT-UFS-aerosol.txt:      postcntrl_ufs_aerosol.xml      post_avblfld
 postxconfig-NT-UFS-aerosol-F00.txt:  postcntrl_ufs_aerosol_f00.xml  post_avblflds.xml
 postxconfig-NT-GEFS-aerosol.txt:     postcntrl_gefs_aerosol.xml     post_avblflds.xml
 postxconfig-NT-GEFS-F00-aerosol.txt: postcntrl_gefs_aerosol_f00.xml post_avblflds.xml
+postxconfig-NT-CCPP-CHEM.txt:        postcntrl_ccpp_chem.xml        post_avblflds.xml
+postxconfig-NT-CCPP-CHEM-F00.txt:    postcntrl_ccpp_chem_f00.xml    post_avblflds.xml
 postxconfig-NT-AQM.txt:              aqm.xml                        post_avblflds.xml
 postxconfig-NT-SFS.txt:		     postcntrl_sfs.xml		    post_avblflds.xml
 
