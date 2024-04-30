@@ -48,6 +48,8 @@
 !> 2024-01-23 | E James    | Using consistent snow ratio SR from history files throughout GSL precip type diagnosis.
 !> 2024-01-30 | A Jensen   | Comment out graupel precipitation warning. 
 !> 2024-02-07 | E James    | Enabling output of LAI and wilting point for RRFS.
+!> 2024-03-25 | E James    | Enabling output of column integrated soil moisture.
+!> 2024-04-23 | E James    | Adding smoke emissions (ebb) from RRFS
 !>     
 !> @note
 !> USAGE:    CALL SURFCE
@@ -74,7 +76,7 @@
 !     
 !     INCLUDE GRID DIMENSIONS.  SET/DERIVE OTHER PARAMETERS.
 !
-      use vrbls4d, only: smoke, fv3dust, coarsepm
+      use vrbls4d, only: smoke, fv3dust, coarsepm, ebb
       use vrbls3d, only: zint, pint, t, pmid, q, f_rimef
       use vrbls2d, only: ths, qs, qvg, qv2m, tsnow, tg, smstav, smstot,       &
                          cmc, sno, snoavg, psfcavg, t10avg, snonc, ivgtyp,    &
@@ -709,6 +711,32 @@
          if(grib=='grib2') then
           cfld=cfld+1
           fld_info(cfld)%ifld=IAVBLFLD(IGET(036))
+!$omp parallel do private(i,j,ii,jj)
+          do j=1,jend-jsta+1
+            jj = jsta+j-1
+            do i=1,iend-ista+1
+            ii = ista+i-1
+              datapd(i,j,cfld) = GRID1(ii,jj)
+            enddo
+          enddo
+         endif
+      ENDIF
+!
+!     TOTAL SOIL MOISTURE
+      IF (IGET(713)>0) THEN
+!$omp parallel do private(i,j)
+         DO J=JSTA,JEND
+           DO I=ISTA,IEND
+!             IF(SMSTOT(I,J)/=SPVAL) THEN
+               GRID1(I,J) = SMSTOT(I,J)
+!             ELSE
+!               GRID1(I,J) = SPVAL
+!             ENDIF
+           ENDDO
+         ENDDO
+         if(grib=='grib2') then
+          cfld=cfld+1
+          fld_info(cfld)%ifld=IAVBLFLD(IGET(713))
 !$omp parallel do private(i,j,ii,jj)
           do j=1,jend-jsta+1
             jj = jsta+j-1
@@ -2194,6 +2222,22 @@
            if(grib=='grib2') then
              cfld=cfld+1
              fld_info(cfld)%ifld=IAVBLFLD(IGET(1014))
+             datapd(1:iend-ista+1,1:jend-jsta+1,cfld) = GRID1(ista:iend,jsta:jend)
+           endif
+         ENDIF
+!
+! E. James - 23 Apr 2024: EBB from RRFS on lowest model level
+!
+         IF (IGET(1017)>0) THEN
+           GRID1=SPVAL
+           DO J=JSTA,JEND
+             DO I=ISTA,IEND
+               GRID1(I,J) = EBB(I,J,LM,1)/(1E9)
+             ENDDO
+           ENDDO
+           if(grib=='grib2') then
+             cfld=cfld+1
+             fld_info(cfld)%ifld=IAVBLFLD(IGET(1017))
              datapd(1:iend-ista+1,1:jend-jsta+1,cfld) = GRID1(ista:iend,jsta:jend)
            endif
          ENDIF
