@@ -296,8 +296,8 @@
 
     <param>
        <post_avblfldidx>36</post_avblfldidx>
-       <shortname>SOILM_ON_DEPTH_BEL_LAND_SFC</shortname>
-       <pname>SOILMOI</pname>
+       <shortname>GFS_CISOILM_ON_DEPTH_BEL_LAND_SFC</shortname>
+       <pname>CISOILM</pname>
        <fixed_sfc1_type>depth_bel_land_sfc</fixed_sfc1_type>
        <fixed_sfc2_type>depth_bel_land_sfc</fixed_sfc2_type>
        <scale>3.0</scale>
@@ -1510,7 +1510,6 @@
        <post_avblfldidx>171</post_avblfldidx>
        <shortname>RUC_MSTAV_ON_DEPTH_BEL_LAND_SFC</shortname>
        <pname>MSTAV</pname>
-       <table_info>NCEP</table_info>
        <fixed_sfc1_type>depth_bel_land_sfc</fixed_sfc1_type>
        <scale>3.0</scale>
     </param>
@@ -4146,6 +4145,15 @@
        <scale>6.0</scale>
     </param>
 
+<!-- 477 EDR on FD_HEIGHT_LVL (for regional model)-->
+    <param>
+       <post_avblfldidx>477</post_avblfldidx>
+       <shortname>CIT_GTG_ON_SPEC_ALT_ABOVE_MEAN_SEA_LVL</shortname>
+       <pname>CITEDR</pname>
+       <fixed_sfc1_type>spec_alt_above_mean_sea_lvl</fixed_sfc1_type>
+       <scale>3.0</scale>
+    </param>
+
     <param>
        <post_avblfldidx>480</post_avblfldidx>
        <shortname>ICESEV_ON_ISOBARIC_SFC</shortname>
@@ -4987,6 +4995,23 @@
        <pname>ICEG</pname>
        <fixed_sfc1_type>spec_alt_above_mean_sea_lvl</fixed_sfc1_type>
        <scale>4.0</scale>
+    </param>
+
+    <!-- aerosol extinction from 599, 3D -->
+    <param>
+       <post_avblfldidx>599</post_avblfldidx>
+       <shortname>AER_EXTIN_HYBRID_LVL</shortname>
+       <pdstmpl>tmpl4_48</pdstmpl>
+       <pname>AECOEF</pname>
+       <aerosol_type>total_aerosol</aerosol_type>
+       <fixed_sfc1_type>hybrid_lvl</fixed_sfc1_type>
+       <typ_intvl_size>equall_to_first_limit</typ_intvl_size>
+       <scale_fact_1st_size>9</scale_fact_1st_size>
+       <scale_val_1st_size>139</scale_val_1st_size>
+       <scale_val_1st_wvlen>550</scale_val_1st_wvlen>
+       <scale_fact_2nd_wvlen>9</scale_fact_2nd_wvlen>
+       <scale_val_2nd_wvlen>550</scale_val_2nd_wvlen>
+       <scale> 9.0</scale>
     </param>
 
 <!-- 600-605 (GFS aerosol AOD) -->
@@ -6592,6 +6617,14 @@
     </param>
 
     <param>
+       <post_avblfldidx>713</post_avblfldidx>
+       <shortname>CISOILM_ON_DEPTH_BEL_LAND_SFC</shortname>
+       <pname>CISOILM</pname>
+       <fixed_sfc1_type>depth_bel_land_sfc</fixed_sfc1_type>
+       <scale>3.0</scale>
+    </param>
+
+    <param>
        <post_avblfldidx>719</post_avblfldidx>
        <shortname>INST_USWRF_ON_TOP_OF_ATMOS</shortname>
        <pname>USWRF</pname>
@@ -6922,7 +6955,7 @@
        <post_avblfldidx>755</post_avblfldidx>
        <shortname>HWP_ON_SURFACE</shortname>
        <longname>Hourly Wildfire Potential on surface</longname>
-       <pname>FWINX</pname>
+       <pname>WFIREPOT</pname>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>5.0</scale>
     </param>
@@ -7427,27 +7460,28 @@
        <post_avblfldidx>913</post_avblfldidx>
        <shortname>1H_FFG_EXCEEDANCE</shortname>
        <pdstmpl>tmpl4_8</pdstmpl>
-       <pname>FFLDRO</pname>
+       <pname>QPFFFG</pname>
+       <table_info>NCEP</table_info>
        <stats_proc>ACM</stats_proc>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
-       <scale>4.0</scale>
     </param>
 
     <param>
        <post_avblfldidx>914</post_avblfldidx>
        <shortname>ACM_FFG_EXCEEDANCE</shortname>
        <pdstmpl>tmpl4_8</pdstmpl>
-       <pname>FFLDRO</pname>
+       <pname>QPFFFG</pname>
+       <table_info>NCEP</table_info>
        <stats_proc>ACM</stats_proc>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
-       <scale>4.0</scale>
     </param>
 
     <param>
        <post_avblfldidx>915</post_avblfldidx>
        <shortname>1H_2YARI_EXCEEDANCE</shortname>
        <pdstmpl>tmpl4_8</pdstmpl>
-       <pname>GWLOWS</pname>
+       <pname>QPFARI</pname>
+       <table_info>NCEP</table_info>
        <stats_proc>ACM</stats_proc>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>4.0</scale>
@@ -7457,7 +7491,8 @@
        <post_avblfldidx>916</post_avblfldidx>
        <shortname>ACM_2YARI_EXCEEDANCE</shortname>
        <pdstmpl>tmpl4_8</pdstmpl>
-       <pname>GWLOWS</pname>
+       <pname>QPFARI</pname>
+       <table_info>NCEP</table_info>
        <stats_proc>ACM</stats_proc>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>4.0</scale>
@@ -7467,7 +7502,8 @@
        <post_avblfldidx>917</post_avblfldidx>
        <shortname>1H_5YARI_EXCEEDANCE</shortname>
        <pdstmpl>tmpl4_8</pdstmpl>
-       <pname>GWLOWS</pname>
+       <pname>QPFARI</pname>
+       <table_info>NCEP</table_info>
        <stats_proc>ACM</stats_proc>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>4.0</scale>
@@ -7477,7 +7513,8 @@
        <post_avblfldidx>918</post_avblfldidx>
        <shortname>ACM_5YARI_EXCEEDANCE</shortname>
        <pdstmpl>tmpl4_8</pdstmpl>
-       <pname>GWLOWS</pname>
+       <pname>QPFARI</pname>
+       <table_info>NCEP</table_info>
        <stats_proc>ACM</stats_proc>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>4.0</scale>
@@ -7487,7 +7524,8 @@
        <post_avblfldidx>919</post_avblfldidx>
        <shortname>1H_10YARI_EXCEEDANCE</shortname>
        <pdstmpl>tmpl4_8</pdstmpl>
-       <pname>GWLOWS</pname>
+       <pname>QPFARI</pname>
+       <table_info>NCEP</table_info>
        <stats_proc>ACM</stats_proc>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>4.0</scale>
@@ -7497,7 +7535,8 @@
        <post_avblfldidx>920</post_avblfldidx>
        <shortname>ACM_10YARI_EXCEEDANCE</shortname>
        <pdstmpl>tmpl4_8</pdstmpl>
-       <pname>GWLOWS</pname>
+       <pname>QPFARI</pname>
+       <table_info>NCEP</table_info>
        <stats_proc>ACM</stats_proc>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>4.0</scale>
@@ -7507,7 +7546,8 @@
        <post_avblfldidx>921</post_avblfldidx>
        <shortname>1H_100YARI_EXCEEDANCE</shortname>
        <pdstmpl>tmpl4_8</pdstmpl>
-       <pname>GWLOWS</pname>
+       <pname>QPFARI</pname>
+       <table_info>NCEP</table_info>
        <stats_proc>ACM</stats_proc>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>4.0</scale>
@@ -7517,7 +7557,8 @@
        <post_avblfldidx>922</post_avblfldidx>
        <shortname>ACM_100YARI_EXCEEDANCE</shortname>
        <pdstmpl>tmpl4_8</pdstmpl>
-       <pname>GWLOWS</pname>
+       <pname>QPFARI</pname>
+       <table_info>NCEP</table_info>
        <stats_proc>ACM</stats_proc>
        <fixed_sfc1_type>surface</fixed_sfc1_type>
        <scale>4.0</scale>

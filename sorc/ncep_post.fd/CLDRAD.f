@@ -88,7 +88,7 @@
       use vrbls3d, only: QQW, QQR, T, ZINT, CFR, QQI, QQS, Q, EXT, ZMID,PMID,&
                          PINT, DUEM, DUSD, DUDP, DUWT, DUSV, SSEM, SSSD,SSDP,&
                          SSWT, SSSV, BCEM, BCSD, BCDP, BCWT, BCSV, OCEM,OCSD,&
-                         OCDP, OCWT, OCSV, SCA, ASY,CFR_RAW
+                         OCDP, OCWT, OCSV, SCA, ASY,CFR_RAW, extcof55
       use vrbls2d, only: CLDEFI, CFRACL, AVGCFRACL, CFRACM, AVGCFRACM, CFRACH,&
                          AVGCFRACH, AVGTCDC, NCFRST, ACFRST, NCFRCV, ACFRCV,  &
                          HBOT, HBOTD, HBOTS, HTOP, HTOPD, HTOPS,  FIS, PBLH,  &
@@ -117,7 +117,7 @@
                             NBIN_SS, NBIN_OC,NBIN_BC,NBIN_SU,NBIN_NO3,DTQ2,   &
                             JM, LM, gocart_on, gccpp_on, nasa_on, me, rdaod,  &
                             ISTA, IEND,aqf_on
-      use rqstfld_mod, only: IGET, ID, LVLS, IAVBLFLD
+      use rqstfld_mod, only: IGET, ID, LVLS, IAVBLFLD, lvlsxml
       use gridspec_mod, only: dyval, gridtype
       use cmassi_mod,  only: TRAD_ice
       use machine_post,     only: kind_phys
@@ -4670,7 +4670,6 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
 
         IF ( LAEROPT ) THEN
          PRINT *, 'COMPUTE AEROSOL OPTICAL PROPERTIES'
-
 !!! ALLOCATE AEROSOL OPTICAL PROPERTIES
          ALLOCATE ( extrhd_DU(KRHLEV,nbin_du,NBDSW))
          ALLOCATE ( extrhd_SS(KRHLEV,nbin_ss,NBDSW))
@@ -4950,6 +4949,7 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
 ! SKIP IF POST PRODUCT IS NOT REQUESTED
         IF ( LEXT .OR. LSCA .OR. LASY ) THEN
 ! COMPUTE DUST AOD
+         extcof55=0.0
          AOD_DU=SPVAL
          SCA_DU=SPVAL
          ASY_DU=SPVAL
@@ -4970,6 +4970,7 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
                EXT(I,J,L) = EXT(I,J,L) * 1000.
                SCA(I,J,L) = SCA(I,J,L) * 1000.
                ASY(I,J,L) = ASY(I,J,L) * 1000.
+               extcof55(I,J,L)=extcof55(I,J,L)+EXT(I,J,L)
              ENDDO  ! L-loop
            ENDDO    ! I-loop
          ENDDO      ! J-loop
@@ -5003,6 +5004,7 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
                EXT(I,J,L) = EXT(I,J,L) * 1000.
                SCA(I,J,L) = SCA(I,J,L) * 1000.
                ASY(I,J,L) = ASY(I,J,L) * 1000.
+               extcof55(I,J,L)=extcof55(I,J,L)+EXT(I,J,L)
              ENDDO  ! L-loop
            ENDDO    ! I-loop
          ENDDO      ! J-loop
@@ -5036,6 +5038,7 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
                EXT(I,J,L) = EXT(I,J,L) * 1000.
                SCA(I,J,L) = SCA(I,J,L) * 1000.
                ASY(I,J,L) = ASY(I,J,L) * 1000.
+               extcof55(I,J,L)=extcof55(I,J,L)+EXT(I,J,L)
              ENDDO  ! L-loop
            ENDDO    ! I-loop
          ENDDO      ! J-loop
@@ -5069,6 +5072,7 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
                EXT(I,J,L) = EXT(I,J,L) * 1000.
                SCA(I,J,L) = SCA(I,J,L) * 1000.
                ASY(I,J,L) = ASY(I,J,L) * 1000.
+               extcof55(I,J,L)=extcof55(I,J,L)+EXT(I,J,L)
              ENDDO  ! L-loop
            ENDDO    ! I-loop
          ENDDO      ! J-loop
@@ -5101,6 +5105,7 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
                EXT(I,J,L) = EXT(I,J,L) * 1000.
                SCA(I,J,L) = SCA(I,J,L) * 1000.
                ASY(I,J,L) = ASY(I,J,L) * 1000.
+               extcof55(I,J,L)=extcof55(I,J,L)+EXT(I,J,L)
              ENDDO  ! L-loop
            ENDDO    ! I-loop
          ENDDO      ! J-loop
@@ -5109,10 +5114,10 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
          CALL CALPW(ASY_OC,21)
 
          if ( nasa_on ) then
-! COMPUTE ORGANIC CARBON AOD
-         AOD_NI=SPVAL
-         SCA_NI=SPVAL
-         ASY_NI=SPVAL
+! COMPUTE NITRATE AOD
+         AOD_NI=0.0
+         SCA_NI=0.0
+         ASY_NI=0.0
          EXT=0.0
          SCA=0.0
          ASY=0.0
@@ -5174,11 +5179,11 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
            ASY_NI(I,J) = MAX (ASY_NI(I,J), 0.0)
 
             AOD(I,J)    = AOD_DU(I,J) + AOD_BC(I,J) + AOD_OC(I,J) +   &
-     &                  AOD_SU(I,J) + AOD_SS(I,J) + AOD_NI(I,J)
+     &                  AOD_SU(I,J) + AOD_SS(I,J) !+ AOD_NI(I,J)
             SCA2D(I,J) = SCA_DU(I,J) + SCA_BC(I,J) + SCA_OC(I,J) +    &
-     &                 SCA_SU(I,J) + SCA_SS(I,J) + SCA_NI(I,J)
+     &                 SCA_SU(I,J) + SCA_SS(I,J)! + SCA_NI(I,J)
             ASY2D(I,J) = ASY_DU(I,J) + ASY_BC(I,J) + ASY_OC(I,J) +    &
-     &                 ASY_SU(I,J) + ASY_SS(I,J) + ASY_NI(I,J)
+     &                 ASY_SU(I,J) + ASY_SS(I,J) !+ ASY_NI(I,J)
            endif
            
            if (gocart_on .or. gccpp_on) then
@@ -5283,10 +5288,37 @@ snow_check:   IF (QQS(I,J,L)>=QCLDmin) THEN
 
         ENDIF       ! IB IF-BLOCK (340NM)
 
-
 ! WRITE OUT AOD FOR DU, SU, SS, OC, BC for all wavelengths
 ! WRITE OUT SPECIATED AEROSOL OPTICAL PROPERTIES
         IF ( IB == 3 ) THEN                 !!! FOR 550NM ONLY
+!Total extinction for 550 NM
+
+           DO L=1,LM
+           IF (IGET(599)>0) THEN
+             IF (LVLS(L,IGET(599))>0) THEN
+               LL=LM-L+1
+!$omp parallel do private(i,j)
+               DO J=JSTA,JEND
+                 DO I=ista,iend
+                   GRID1(I,J) = extcof55(I,J,LL)
+                 ENDDO
+               ENDDO
+               if(grib=="grib2") then
+                 cfld=cfld+1
+                 fld_info(cfld)%ifld=IAVBLFLD(IGET(599))
+                 fld_info(cfld)%lvl=LVLSXML(L,IGET(599))
+!$omp parallel do private(i,j,ii,jj)
+                 do j=1,jend-jsta+1
+                   jj = jsta+j-1
+                   do i=1,iend-ista+1
+                     ii = ista+i-1
+                     datapd(i,j,cfld) = GRID1(ii,jj)
+                   enddo
+                 enddo
+               endif
+             END IF
+           ENDIF
+           ENDDO
 
 ! WRITE OUT TOTAL SCATTERING AOD
           IF ( IGET(650) > 0 )  THEN
